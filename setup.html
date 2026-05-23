@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>DCA Tracker — Setup</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;background:#070c14;color:#e2e8f4;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{background:#111b2e;border:1px solid #1e2d4a;border-radius:20px;padding:32px;width:100%;max-width:440px}
+  h1{font-size:22px;font-weight:800;margin-bottom:6px}
+  p{font-size:13px;color:#5a7a9a;line-height:1.6;margin-bottom:24px}
+  label{display:block;font-size:12px;font-weight:700;color:#5a7a9a;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+  input{width:100%;background:#0d1525;border:1px solid #1e2d4a;color:#e2e8f4;padding:10px 14px;border-radius:10px;font-size:13px;outline:none;margin-bottom:16px;font-family:monospace}
+  input:focus{border-color:#3b82f6}
+  .btn{width:100%;background:#3b82f6;color:#fff;border:none;padding:12px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px}
+  .btn:hover{background:#60a5fa}
+  .status{margin-top:16px;padding:10px 14px;border-radius:10px;font-size:13px;display:none}
+  .status.ok{background:rgba(74,222,128,.1);color:#4ade80;display:block}
+  .status.err{background:rgba(248,113,113,.1);color:#f87171;display:block}
+  .hint{font-size:11px;color:#5a7a9a;margin-top:-10px;margin-bottom:16px;line-height:1.5}
+  a{color:#60a5fa}
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>⚙️ Cloud Sync Setup</h1>
+  <p>Enter your Google Apps Script details. These are stored only in your browser's localStorage — never sent anywhere except to your own Apps Script.</p>
+
+  <label>Apps Script URL</label>
+  <input id="url" type="url" placeholder="https://script.google.com/macros/s/.../exec"/>
+  <p class="hint">From Apps Script → Deploy → Manage deployments → copy the Web app URL</p>
+
+  <label>Secret Token</label>
+  <input id="token" type="password" placeholder="Your SECRET_TOKEN from Code.gs"/>
+  <p class="hint">Must match the <code>SECRET_TOKEN</code> value in your Code.gs exactly</p>
+
+  <button class="btn" onclick="testAndSave()">Test Connection & Save</button>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+// Pre-fill if already configured
+const saved = JSON.parse(localStorage.getItem("dca_sync_config") || "{}");
+if (saved.url)   document.getElementById("url").value   = saved.url;
+if (saved.token) document.getElementById("token").value = saved.token;
+
+async function testAndSave() {
+  const url   = document.getElementById("url").value.trim();
+  const token = document.getElementById("token").value.trim();
+  const status = document.getElementById("status");
+
+  if (!url || !token) { showStatus("err", "Both fields are required."); return; }
+
+  showStatus("ok", "Testing connection…");
+
+  try {
+    const res  = await fetch(`${url}?action=ping&token=${encodeURIComponent(token)}`, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action: "ping", token }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      localStorage.setItem("dca_sync_config", JSON.stringify({ url, token }));
+      showStatus("ok", "✅ Connected! Redirecting to app…");
+      setTimeout(() => { window.location.href = "index.html"; }, 1500);
+    } else {
+      showStatus("err", "❌ " + (data.error || "Connection failed"));
+    }
+  } catch (err) {
+    showStatus("err", "❌ " + err.message + " — check your URL and that the script is deployed as 'Anyone' access.");
+  }
+}
+
+function showStatus(type, msg) {
+  const el = document.getElementById("status");
+  el.className = "status " + type;
+  el.textContent = msg;
+}
+</script>
+</body>
+</html>
