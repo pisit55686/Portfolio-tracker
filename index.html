@@ -322,10 +322,15 @@ const Modal = ({ asset, onSave, onClose }) => {
 const DriveModal = ({ assets, onClose, onRestore }) => {
   const [status, setStatus] = useState("idle"), [msg, setMsg] = useState("");
   const exportJSON = () => {
-    const blob = new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),assets},null,2)],{type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href=url; a.download=`portfolio_${new Date().toISOString().slice(0,10)}.json`; a.click();
-    URL.revokeObjectURL(url); setStatus("saved"); setMsg("ดาวน์โหลดสำเร็จ");
+    const json = JSON.stringify({version:1,exportedAt:new Date().toISOString(),assets},null,2);
+    const dataUri = "data:application/json;charset=utf-8," + encodeURIComponent(json);
+    const a = document.createElement("a");
+    a.href = dataUri;
+    a.download = `portfolio_${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setStatus("saved"); setMsg("ดาวน์โหลดสำเร็จ — เช็คใน Files app");
   };
   const importJSON = (e) => {
     const file = e.target.files[0]; if (!file) return; setStatus("loading");
@@ -568,12 +573,14 @@ function App() {
       .confirm-actions{display:flex;gap:10px;margin-top:4px;justify-content:center}
       .btn-delete{display:inline-flex;align-items:center;gap:6px;background:#ef4444;color:#fff;border:none;padding:9px 20px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit}
       .btn-delete:hover{background:#dc2626}
-      @media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
+      .price-mobile{display:none} @media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
       @media(max-width:600px){
         .header{padding:0 14px}.content{padding:14px}.highlights{grid-template-columns:1fr}
         .stats-grid{grid-template-columns:1fr 1fr}.stat-val{font-size:16px}
         .form-grid{grid-template-columns:1fr}
-        th:nth-child(4),th:nth-child(7),th:nth-child(8),td:nth-child(4),td:nth-child(7),td:nth-child(8){display:none}
+        th:nth-child(7),th:nth-child(8),td:nth-child(7),td:nth-child(8){display:none}
+        th:nth-child(4),td:nth-child(4){display:none}
+        .price-mobile{display:block;font-family:monospace;font-size:11px;color:#94a3b8;margin-top:2px}
       }
     `}</style>
 
@@ -626,7 +633,7 @@ function App() {
           <div className="table-wrap"><table>
             <thead><tr><th>สินทรัพย์</th><th>ประเภท</th><th>จำนวน</th><th>ราคาปัจจุบัน</th><th>มูลค่า</th><th>P&L</th><th>%P&L</th><th>หมายเหตุ</th><th/></tr></thead>
             <tbody>{filtered.map(a=><tr key={a.id}>
-              <td><div className="ticker-badge"><span className={`type-dot`} style={{background:a.type==="หุ้น"?"#60a5fa":a.type==="คริปโต"?"#f59e0b":a.type==="ETF"?"#34d399":a.type==="กองทุน"?"#f472b6":"#a78bfa"}}/><div><div style={{fontWeight:700,fontSize:13}}>{a.ticker}{a.dcaLots?.length>1&&<span className="dca-tag">DCA {a.dcaLots.length}x</span>}</div><div style={{fontSize:11,color:"var(--muted)"}}>{a.name}</div></div></div></td>
+              <td><div className="ticker-badge"><span className={`type-dot`} style={{background:a.type==="หุ้น"?"#60a5fa":a.type==="คริปโต"?"#f59e0b":a.type==="ETF"?"#34d399":a.type==="กองทุน"?"#f472b6":"#a78bfa"}}/><div><div style={{fontWeight:700,fontSize:13}}>{a.ticker}{a.dcaLots?.length>1&&<span className="dca-tag">DCA {a.dcaLots.length}x</span>}</div><div style={{fontSize:11,color:"var(--muted)"}}>{a.name}</div><div className="price-mobile">{fmt(a.currentPrice)} <span style={{fontSize:10}}>{a.currency}</span></div></div></div></td>
               <td><span style={{fontSize:12,color:"var(--muted)"}}>{a.type}</span></td>
               <td><span className="mono">{fmt(a.qty,a.qty%1===0?0:4)}</span></td>
               <td><span className="mono">{fmt(a.currentPrice)} <span style={{color:"var(--muted)",fontSize:10}}>{a.currency}</span></span></td>
