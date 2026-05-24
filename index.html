@@ -1409,8 +1409,6 @@ function App() {
             <Icon d={darkMode?Icons.sun:Icons.moon} size={16}/>
           </button>
           <button className="btn-ghost" onClick={exportCSV} title="Export CSV"><Icon d={Icons.export} size={15}/> CSV</button>
-          <button className="btn-ghost" onClick={()=>setShowGoals(true)}><Icon d={Icons.target} size={15}/> เป้าหมาย</button>
-          <button className="btn-ghost" onClick={()=>setShowTools(true)}><Icon d={Icons.calculator} size={15}/> คำนวณ</button>
           <button className="btn-ghost" onClick={()=>setShowLog(true)}><Icon d={Icons.clock} size={15}/></button>
           <button className="btn-ghost" onClick={()=>setShowDrive(true)}><Icon d={Icons.drive} size={15}/></button>
           <button className="btn-primary" onClick={()=>{setEditAsset(null);setShowModal(true);}}><Icon d={Icons.plus} size={15}/> เพิ่ม</button>
