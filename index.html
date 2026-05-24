@@ -1,783 +1,965 @@
 <!DOCTYPE html>
-<html lang="th" data-theme="dark">
+<html lang="th">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>PortfolioTH</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js" crossorigin="anonymous"></script>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet"/>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#070c14;--surface:#0d1525;--card:#111b2e;--border:#1e2d4a;
-  --text:#e2e8f4;--muted:#5a7a9a;--accent:#3b82f6;--accent2:#60a5fa;
-  --positive:#4ade80;--negative:#f87171;--warning:#fbbf24;
-  --mono:'IBM Plex Mono',monospace;
-}
-[data-theme="light"]{
-  --bg:#f0f4f8;--surface:#fff;--card:#fff;--border:#d1dbe8;
-  --text:#1a2332;--muted:#6b7f96;--accent:#2563eb;--accent2:#3b82f6;
-}
-html,body,#root{min-height:100%;background:var(--bg)}
-body{font-family:'Noto Sans Thai',sans-serif;color:var(--text);background:var(--bg)}
+:root{--bg:#070c14;--surface:#0d1525;--card:#111b2e;--border:#1e2d4a;--text:#e2e8f4;--muted:#5a7a9a;--accent:#3b82f6;--accent2:#60a5fa;--pos:#4ade80;--neg:#f87171;--warn:#fbbf24;--mono:'IBM Plex Mono',monospace}
+[data-theme=light]{--bg:#f0f4f8;--surface:#fff;--card:#fff;--border:#d1dbe8;--text:#1a2332;--muted:#6b7f96;--accent:#2563eb;--accent2:#3b82f6}
+html,body,#root{min-height:100%;background:var(--bg);color:var(--text)}
+body{font-family:'Noto Sans Thai',sans-serif}
 </style>
 </head>
 <body>
-<div id="root"><div style="color:#4ade80;padding:40px;font-family:monospace">Loading...</div></div>
-<script>
-  window.onerror = function(msg, url, line, col, error) {
-    console.error('Global error:', error || msg);
-    alert('Error: ' + (error?.message || msg));
-    return false;
-  };
-</script>
-<script type="text/babel" data-presets="react">
-const { useState, useEffect, useCallback, useMemo, useRef } = React;
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback,useMemo,useRef} = React;
 
-// ── Icons ────────────────────────────────────────────────────────────────────
-const Icon = ({ d, size=18 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+// ── Icons ──────────────────────────────────────────────────────────────────────
+const Ic = ({d,size=18,cls=""}) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cls}>
     <path d={d}/>
   </svg>
 );
 const I = {
-  plus:    "M12 5v14M5 12h14",
-  trash:   "M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6",
-  edit:    "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z",
-  x:       "M18 6L6 18M6 6l12 12",
-  check:   "M20 6L9 17l-5-5",
-  refresh: "M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15",
-  cloud:   "M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z",
-  down:    "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",
-  up:      "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12",
-  chart:   "M18 20V10M12 20V4M6 20v-6",
-  pie:     "M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z",
-  trend:   "M23 6l-9.5 9.5-5-5L1 18M17 6h6v6",
-  clock:   "M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zM12 6v6l4 2",
-  sun:     "M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42M12 5a7 7 0 1 0 0 14A7 7 0 0 0 12 5z",
-  moon:    "M21 12.79A10 10 0 1 1 11.21 3 7 7 0 0 0 21 12.79z",
-  target:  "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
-  calc:    "M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM8 6h2M14 6h2M8 10h2M14 10h2M8 14h8",
-  alert:   "M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01",
-  bell:    "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0",
-  sheets:  "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h5",
-  link:    "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71",
-  act:     "M22 12h-4l-3 9L9 3l-3 9H2",
-  globe:   "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z",
+  plus:"M12 5v14M5 12h14",
+  trash:"M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6",
+  edit:"M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z",
+  x:"M18 6L6 18M6 6l12 12",
+  check:"M20 6L9 17l-5-5",
+  refresh:"M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15",
+  cloud:"M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z",
+  down:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",
+  up:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12",
+  chart:"M18 20V10M12 20V4M6 20v-6",
+  pie:"M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z",
+  tup:"M23 6l-9.5 9.5-5-5L1 18M17 6h6v6",
+  tdn:"M23 18l-9.5-9.5-5 5L1 6M17 18h6v-6",
+  clock:"M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM12 6v6l4 2",
+  bell:"M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0",
+  alert:"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0zM12 9v4M12 17h.01",
+  sun:"M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42M12 5a7 7 0 1 0 0 14A7 7 0 0 0 12 5z",
+  moon:"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z",
+  target:"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM12 14a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
+  calc:"M4 2h16a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zM8 6h2M14 6h2M8 10h2M14 10h2M8 14h2M14 14h2M8 18h8",
+  sheets:"M4 15l4-8 4 8M12 7l4 8M2 19h20",
+  zap:"M13 2L3 14h9l-1 8 10-12h-9l1-8z",
+  csv:"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3",
+  activity:"M22 12h-4l-3 9L9 3l-3 9H2",
+  globe:"M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zM2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z",
+  dollar:"M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6",
 };
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-const fmt   = (n, d=2) => (n==null||isNaN(n)) ? "—" : Number(n).toLocaleString("th-TH",{minimumFractionDigits:d,maximumFractionDigits:d});
-const fmtUSD= (n) => (n==null||isNaN(n)) ? "—" : (n<0?"-$":"$")+Math.abs(Number(n)).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
-const pct   = (n) => (n==null||isNaN(n)) ? "—" : (n>=0?"+":"")+Number(n).toFixed(2)+"%";
-const pc    = (n) => n>0?"positive":n<0?"negative":"neutral";
-const ago   = (iso) => { if(!iso) return "ไม่เคย"; const d=(Date.now()-new Date(iso))/1000; if(d<60) return Math.floor(d)+"s ago"; if(d<3600) return Math.floor(d/60)+"m ago"; if(d<86400) return Math.floor(d/3600)+"h ago"; return new Date(iso).toLocaleDateString("th-TH"); };
-const ls    = { get:(k,f=null)=>{ try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):f;}catch{return f;} }, set:(k,v)=>{ try{localStorage.setItem(k,JSON.stringify(v));}catch{} } };
+// ── Helpers ────────────────────────────────────────────────────────────────────
+const f2 = (n,d=2) => n==null||isNaN(n) ? "—" : Number(n).toLocaleString("th-TH",{minimumFractionDigits:d,maximumFractionDigits:d});
+const fUSD = (n) => n==null||isNaN(n) ? "—" : (n<0?"-$":"$")+Math.abs(Number(n)).toLocaleString("th-TH",{minimumFractionDigits:2,maximumFractionDigits:2});
+const fPct = (n) => n==null||isNaN(n) ? "—" : (n>=0?"+":"")+Number(n).toFixed(2)+"%";
+const clr = (n) => n>0?"pos":n<0?"neg":"muted";
+const ago = (iso) => { if(!iso) return "ไม่เคย"; const s=(Date.now()-new Date(iso))/1000; if(s<60) return Math.floor(s)+"s ago"; if(s<3600) return Math.floor(s/60)+"m ago"; if(s<86400) return Math.floor(s/3600)+"h ago"; return new Date(iso).toLocaleDateString("th-TH"); };
+const calcPnl = (a) => { const cost=a.qty*a.avgCost,value=a.qty*a.currentPrice,pnlAmt=value-cost; return {cost,value,pnlAmt,pnlPct:cost>0?(pnlAmt/cost)*100:0}; };
 
+// ── Constants ──────────────────────────────────────────────────────────────────
 const TYPES = ["หุ้น","คริปโต","ETF","กองทุน","อื่นๆ"];
 const CCYS  = ["USD","THB","BTC","ETH"];
-const CRYPTO_MAP = {BTC:"bitcoin",ETH:"ethereum",BNB:"binancecoin",SOL:"solana",ADA:"cardano",XRP:"ripple",DOT:"polkadot",DOGE:"dogecoin",AVAX:"avalanche-2",MATIC:"matic-network",LINK:"chainlink",LTC:"litecoin"};
 const SAMPLE = [
-  {id:1,name:"Apple Inc.",ticker:"AAPL",type:"หุ้น",qty:10,avgCost:170.5,currentPrice:189.3,currency:"USD",sector:"Technology",note:"Long term",dateAdded:"2024-01-15"},
-  {id:2,name:"Bitcoin",ticker:"BTC",type:"คริปโต",qty:0.5,avgCost:42000,currentPrice:67500,currency:"USD",sector:"Crypto",note:"DCA",dateAdded:"2024-02-01"},
-  {id:3,name:"NVIDIA",ticker:"NVDA",type:"หุ้น",qty:5,avgCost:495,currentPrice:875,currency:"USD",sector:"Technology",note:"AI",dateAdded:"2024-01-20"},
+  {id:1,name:"Apple Inc.",ticker:"AAPL",type:"หุ้น",qty:10,avgCost:170.5,currentPrice:189.3,currency:"USD",sector:"Technology",note:"Long term hold",dateAdded:"2024-01-15"},
+  {id:2,name:"Bitcoin",ticker:"BTC",type:"คริปโต",qty:0.5,avgCost:42000,currentPrice:67500,currency:"USD",sector:"Crypto",note:"DCA strategy",dateAdded:"2024-02-01"},
+  {id:3,name:"NVIDIA Corp.",ticker:"NVDA",type:"หุ้น",qty:5,avgCost:495,currentPrice:875.4,currency:"USD",sector:"Technology",note:"AI play",dateAdded:"2024-01-20"},
   {id:4,name:"Ethereum",ticker:"ETH",type:"คริปโต",qty:3,avgCost:2100,currentPrice:3450,currency:"USD",sector:"Crypto",note:"",dateAdded:"2024-03-10"},
-  {id:5,name:"PTTGC",ticker:"PTTGC",type:"หุ้น",qty:500,avgCost:38,currentPrice:32.5,currency:"THB",sector:"Energy",note:"Dividend",dateAdded:"2024-02-20"},
+  {id:5,name:"PTT Global Chemical",ticker:"PTTGC",type:"หุ้น",qty:500,avgCost:38,currentPrice:32.5,currency:"THB",sector:"Energy",note:"Dividend stock",dateAdded:"2024-02-20"},
 ];
-const calcPnl = a => { const cost=a.qty*a.avgCost,value=a.qty*a.currentPrice,pnlAmt=value-cost; return {cost,value,pnlAmt,pnlPct:cost>0?(pnlAmt/cost)*100:0}; };
 
-// ── Price APIs ────────────────────────────────────────────────────────────────
+// ── Price APIs ─────────────────────────────────────────────────────────────────
+const CG_IDS = {BTC:"bitcoin",ETH:"ethereum",BNB:"binancecoin",SOL:"solana",ADA:"cardano",XRP:"ripple",DOT:"polkadot",DOGE:"dogecoin",AVAX:"avalanche-2",MATIC:"matic-network",LINK:"chainlink",UNI:"uniswap",LTC:"litecoin"};
+
 const fetchPrices = async (assets) => {
-  const result = {};
+  const results = {};
   const cryptos = assets.filter(a=>a.type==="คริปโต");
   const stocks  = assets.filter(a=>a.type!=="คริปโต");
-  if (cryptos.length) {
-    try {
-      const ids = cryptos.map(a=>CRYPTO_MAP[a.ticker.toUpperCase()]||a.ticker.toLowerCase()).join(",");
-      const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids="+ids+",tether&vs_currencies=usd,thb");
+  if(cryptos.length){
+    try{
+      const ids = cryptos.map(a=>CG_IDS[a.ticker.toUpperCase()]||a.ticker.toLowerCase()).join(",");
+      const r = await fetch("https://api.coingecko.com/api/v3/simple/price?ids="+ids+"&vs_currencies=usd");
       const d = await r.json();
-      cryptos.forEach(a=>{ const id=CRYPTO_MAP[a.ticker.toUpperCase()]||a.ticker.toLowerCase(); if(d[id]&&d[id].usd) result[a.ticker.toUpperCase()]=d[id].usd; });
-      if (d.tether&&d.tether.thb) result._usdthb = d.tether.thb;
-    } catch(e){ console.warn("CoinGecko:",e.message); }
+      cryptos.forEach(a=>{ const id=CG_IDS[a.ticker.toUpperCase()]||a.ticker.toLowerCase(); if(d[id]&&d[id].usd) results[a.ticker.toUpperCase()]=d[id].usd; });
+    }catch(e){console.warn("CoinGecko:",e.message);}
   }
   await Promise.allSettled(stocks.map(async a=>{
-    try {
+    try{
       const t = a.currency==="THB"&&!a.ticker.includes(".")?a.ticker+".BK":a.ticker;
       const url = "https://api.allorigins.win/get?url="+encodeURIComponent("https://query1.finance.yahoo.com/v8/finance/chart/"+t+"?interval=1d&range=1d");
       const r = await fetch(url);
       const w = await r.json();
       const d = JSON.parse(w.contents);
-      const p = d?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      if (p) result[a.ticker.toUpperCase()] = p;
-    } catch(e){ console.warn("Yahoo",a.ticker,":",e.message); }
+      const p = d&&d.chart&&d.chart.result&&d.chart.result[0]&&d.chart.result[0].meta&&d.chart.result[0].meta.regularMarketPrice;
+      if(p) results[a.ticker.toUpperCase()]=p;
+    }catch(e){console.warn("Yahoo "+a.ticker+":",e.message);}
   }));
-  return result;
+  return results;
 };
 
-// ── Sheets API ────────────────────────────────────────────────────────────────
-const sheetsApi = async (url, token, action, body={}) => {
-  const res = await fetch(url+"?action="+action+"&token="+encodeURIComponent(token), {
-    method:"POST", headers:{"Content-Type":"text/plain"},
-    body: JSON.stringify({action, token, ...body}),
-  });
-  if (!res.ok) throw new Error("HTTP "+res.status);
-  const data = await res.json();
-  if (!data.ok) throw new Error(data.error||"Sheets error");
-  return data;
-};
-
-// ── Small reusable components ─────────────────────────────────────────────────
-const Sparkline = ({pos}) => {
-  const pts = useMemo(()=>{ const a=[50]; for(let i=1;i<20;i++) a.push(Math.max(5,Math.min(95,a[i-1]+(Math.random()-(pos ? 0.35 : 0.65))*15))); return a; },[pos]);
-  return <svg viewBox="0 0 100 100" width="70" height="28" preserveAspectRatio="none"><polyline points={pts.map((y,x)=>(x/19*100)+","+y).join(" ")} fill="none" stroke={pos?"#4ade80":"#f87171"} strokeWidth="2.5"/></svg>;
-};
-
-const Donut = ({data}) => {
-  const total = data.reduce((s,d)=>s+d.value,0)||1;
+// ── Donut Chart ────────────────────────────────────────────────────────────────
+const DonutChart = ({data}) => {
+  const total = data.reduce((s,d)=>s+d.value,0);
   let off=0; const R=60,C=2*Math.PI*R;
   const COLS=["#60a5fa","#f59e0b","#34d399","#f472b6","#a78bfa","#fb923c"];
-  const slices=data.map((d,i)=>{ const p=d.value/total,s={...d,dash:p*C,gap:C-p*C,off:off*C,col:COLS[i%6]}; off+=p; return s; });
-  return <div style={{display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
-    <svg viewBox="0 0 160 160" width="150" height="150">
-      <circle cx="80" cy="80" r={R} fill="none" stroke="#1e293b" strokeWidth="24"/>
-      {slices.map((s,i)=><circle key={i} cx="80" cy="80" r={R} fill="none" stroke={s.col} strokeWidth="22" strokeDasharray={s.dash+" "+s.gap} strokeDashoffset={C/4-s.off}/>)}
-      <text x="80" y="78" textAnchor="middle" fill="#e2e8f4" fontSize="10" fontWeight="700">Portfolio</text>
-      <text x="80" y="92" textAnchor="middle" fill="#5a7a9a" fontSize="9">Allocation</text>
-    </svg>
-    <div style={{display:"flex",flexDirection:"column",gap:7}}>
-      {slices.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:7,fontSize:13}}>
-        <span style={{width:9,height:9,borderRadius:"50%",background:s.col,flexShrink:0}}/>
-        <span style={{flex:1}}>{s.label}</span>
-        <span style={{fontFamily:"var(--mono)",fontSize:11,color:"var(--muted)"}}>{((s.value/total)*100).toFixed(1)}%</span>
-      </div>)}
+  const slices = data.map((d,i)=>{ const p=d.value/total; const s={...d,dash:p*C,gap:C-p*C,off:off*C,col:COLS[i%COLS.length]}; off+=p; return s; });
+  return (
+    <div style={{display:"flex",alignItems:"center",gap:20,flexWrap:"wrap"}}>
+      <svg viewBox="0 0 160 160" width="140" height="140">
+        <circle cx="80" cy="80" r={R} fill="none" stroke="#1e2d4a" strokeWidth="22"/>
+        {slices.map((s,i)=><circle key={i} cx="80" cy="80" r={R} fill="none" stroke={s.col} strokeWidth="20" strokeDasharray={s.dash+" "+s.gap} strokeDashoffset={C/4-s.off}/>)}
+        <text x="80" y="85" textAnchor="middle" fill="var(--text)" fontSize="10" fontWeight="700">Allocation</text>
+      </svg>
+      <div style={{display:"flex",flexDirection:"column",gap:7}}>
+        {slices.map((s,i)=><div key={i} style={{display:"flex",alignItems:"center",gap:7,fontSize:12}}>
+          <span style={{width:9,height:9,borderRadius:"50%",background:s.col,flexShrink:0,display:"inline-block"}}/>
+          <span style={{flex:1,color:"var(--text)"}}>{s.label}</span>
+          <span style={{fontFamily:"var(--mono)",color:"var(--muted)",fontSize:11}}>{((s.value/total)*100).toFixed(1)}%</span>
+        </div>)}
+      </div>
     </div>
-  </div>;
+  );
 };
 
+// ── Bar Chart ──────────────────────────────────────────────────────────────────
 const BarChart = ({assets}) => {
-  const data=[...assets].map(a=>({...a,...calcPnl(a)})).sort((a,b)=>b.pnlPct-a.pnlPct);
-  const max=Math.max(...data.map(d=>Math.abs(d.pnlPct)),1);
-  return <div style={{display:"flex",flexDirection:"column",gap:10}}>
-    {data.map(d=><div key={d.id} style={{display:"grid",gridTemplateColumns:"55px 1fr 70px",alignItems:"center",gap:10}}>
-      <span style={{fontFamily:"var(--mono)",fontSize:11,color:"var(--muted)",textAlign:"right"}}>{d.ticker}</span>
-      <div style={{height:8,background:"#1e2d4a",borderRadius:4,overflow:"hidden"}}>
-        <div style={{width:(Math.abs(d.pnlPct)/max*100)+"%",height:"100%",borderRadius:4,background:d.pnlPct>=0?"#4ade80":"#f87171",transition:"width .6s"}}/>
+  const data = assets.map(a=>({...a,...calcPnl(a)})).sort((a,b)=>b.pnlPct-a.pnlPct);
+  const mx = Math.max(...data.map(d=>Math.abs(d.pnlPct)),1);
+  return <div style={{display:"flex",flexDirection:"column",gap:9}}>{data.map(d=>(
+    <div key={d.id} style={{display:"grid",gridTemplateColumns:"52px 1fr 64px",alignItems:"center",gap:8}}>
+      <span style={{fontFamily:"var(--mono)",fontSize:10,color:"var(--muted)",textAlign:"right"}}>{d.ticker}</span>
+      <div style={{height:7,background:"var(--border)",borderRadius:4,overflow:"hidden"}}>
+        <div style={{width:(Math.abs(d.pnlPct)/mx*100)+"%",height:"100%",background:d.pnlPct>=0?"var(--pos)":"var(--neg)",borderRadius:4}}/>
       </div>
-      <span style={{fontFamily:"var(--mono)",fontSize:12,fontWeight:600,textAlign:"right",color:d.pnlPct>0?"var(--positive)":d.pnlPct<0?"var(--negative)":"var(--muted)"}}>{pct(d.pnlPct)}</span>
-    </div>)}
-  </div>;
+      <span style={{fontFamily:"var(--mono)",fontSize:11,fontWeight:700,textAlign:"right",color:d.pnlPct>=0?"var(--pos)":"var(--neg)"}}>{fPct(d.pnlPct)}</span>
+    </div>
+  ))}</div>;
 };
 
-// ── Price Panel ───────────────────────────────────────────────────────────────
-const PricePanel = ({onUpdate, status, lastUpdated, autoMin, setAutoMin}) => {
-  const [cd, setCd] = useState(null);
-  const ref = useRef(null);
-  useEffect(()=>{
-    clearInterval(ref.current);
-    if(autoMin>0){ let s=autoMin*60; setCd(s); ref.current=setInterval(()=>{ s--; setCd(s); if(s<=0){onUpdate();s=autoMin*60;setCd(s); } },1000); }
-    else setCd(null);
-    return ()=>clearInterval(ref.current);
-  },[autoMin]);
-  const fcd = s=>{ if(!s) return ""; return Math.floor(s/60)+":"+(s%60<10?"0":"")+(s%60); };
-  return <div className="panel">
-    <div>
-      <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",marginBottom:6}}>
-        {status==="loading"&&<span className="pill warn"><span className="spin-dot"/>กำลังดึงราคา</span>}
-        {status==="done"   &&<span className="pill ok"><Icon d={I.check} size={12}/> อัพเดทแล้ว</span>}
-        {status==="error"  &&<span className="pill err"><Icon d={I.alert} size={12}/> Error</span>}
-        {status==="idle"   &&<span className="pill dim"><Icon d={I.clock} size={12}/> พร้อมอัพเดท</span>}
-        <span style={{fontSize:11,color:"var(--muted)"}}>อัพเดทล่าสุด: {ago(lastUpdated)}</span>
+// ── Growth Chart ───────────────────────────────────────────────────────────────
+const PERIODS=[{l:"1M",m:1},{l:"3M",m:3},{l:"6M",m:6},{l:"YTD",ytd:true},{l:"1Y",m:12},{l:"2Y",m:24},{l:"ALL",all:true}];
+const BENCHMARKS=[{id:"sp500",label:"S&P 500",col:"#f59e0b",ret:10.5},{id:"nasdaq",label:"NASDAQ",col:"#a78bfa",ret:14.2},{id:"btc",label:"BTC",col:"#fb923c",ret:85},{id:"gold",label:"Gold",col:"#fde68a",ret:7.2}];
+
+const GrowthChart = ({assets}) => {
+  const svgRef = useRef(null);
+  const [period,setPeriod] = useState("1Y");
+  const [benches,setBenches] = useState(["sp500"]);
+  const [tooltip,setTooltip] = useState(null);
+
+  const genBench = (startDate,endDate,annRet) => {
+    const pts=[]; const s=new Date(startDate),e=new Date(endDate);
+    const days=Math.ceil((e-s)/86400000); const dr=Math.pow(1+annRet/100,1/365)-1;
+    let v=100;
+    for(let i=0;i<=days;i+=Math.max(1,Math.floor(days/80))){
+      const noise=(Math.sin(i*0.3)*0.007)+(Math.cos(i*0.17)*0.004);
+      v=v*(1+dr+noise);
+      const d=new Date(s); d.setDate(d.getDate()+i);
+      pts.push({date:d.toISOString().slice(0,10),value:v});
+    }
+    return pts;
+  };
+
+  const portSeries = useMemo(()=>{
+    const evts=[];
+    assets.forEach(a=>{
+      if(a.dcaLots&&a.dcaLots.length){
+        a.dcaLots.forEach(l=>{ if(l.date&&l.qty&&l.price) evts.push({date:l.date,qty:parseFloat(l.qty),price:parseFloat(l.price),currentPrice:a.currentPrice}); });
+      } else if(a.dateAdded){
+        evts.push({date:a.dateAdded,qty:a.qty,price:a.avgCost,currentPrice:a.currentPrice});
+      }
+    });
+    if(!evts.length) return [];
+    evts.sort((a,b)=>a.date.localeCompare(b.date));
+    const now=new Date(); const pd=PERIODS.find(p=>p.l===period)||PERIODS[4];
+    let sd;
+    if(pd.all) sd=new Date(evts[0].date);
+    else if(pd.ytd) sd=new Date(now.getFullYear(),0,1);
+    else{ sd=new Date(now); sd.setMonth(sd.getMonth()-pd.m); }
+    const dates=[]; const cur=new Date(sd);
+    const step=Math.max(1,Math.ceil((now-sd)/86400000/80));
+    while(cur<=now){ dates.push(cur.toISOString().slice(0,10)); cur.setDate(cur.getDate()+step); }
+    if(!dates.includes(now.toISOString().slice(0,10))) dates.push(now.toISOString().slice(0,10));
+    const pts = dates.map(date=>{
+      const rel=evts.filter(e=>e.date<=date);
+      if(!rel.length) return null;
+      const nowTs=now.getTime();
+      const val=rel.reduce((s,e)=>{ const bTs=new Date(e.date).getTime(),dTs=new Date(date).getTime(); const prog=nowTs>bTs?Math.min(1,(dTs-bTs)/(nowTs-bTs)):0; return s+e.qty*(e.price+(e.currentPrice-e.price)*prog); },0);
+      return {date,value:val};
+    }).filter(Boolean);
+    if(!pts.length) return [];
+    const base=pts[0].value||1;
+    return pts.map(p=>({...p,norm:(p.value/base)*100}));
+  },[assets,period]);
+
+  const benchSeries = useMemo(()=>{
+    if(!portSeries.length) return {};
+    const sd=portSeries[0].date,ed=portSeries[portSeries.length-1].date;
+    const r={};
+    BENCHMARKS.forEach(b=>{ if(benches.includes(b.id)) r[b.id]=genBench(sd,ed,b.ret); });
+    return r;
+  },[portSeries,benches]);
+
+  const chart = useMemo(()=>{
+    if(!portSeries.length) return null;
+    const W=780,H=260,PL=50,PR=12,PT=12,PB=32,cW=W-PL-PR,cH=H-PT-PB;
+    const allV=[...portSeries.map(p=>p.norm)];
+    Object.values(benchSeries).forEach(s=>s.forEach(p=>allV.push(p.value)));
+    const mn=Math.min(...allV)*0.97,mx=Math.max(...allV)*1.03;
+    const minTs=new Date(portSeries[0].date).getTime(),maxTs=Date.now();
+    const xP=d=>PL+((new Date(d).getTime()-minTs)/(maxTs-minTs||1))*cW;
+    const yP=v=>PT+(1-(v-mn)/(mx-mn||1))*cH;
+    const portPath=portSeries.map((p,i)=>(i===0?"M":"L")+xP(p.date).toFixed(1)+","+yP(p.norm).toFixed(1)).join(" ");
+    const areaPath=portPath+" L"+xP(portSeries[portSeries.length-1].date).toFixed(1)+","+(PT+cH)+" L"+PL+","+(PT+cH)+" Z";
+    const bPaths={};
+    Object.entries(benchSeries).forEach(([id,s])=>{ bPaths[id]=s.map((p,i)=>(i===0?"M":"L")+xP(p.date).toFixed(1)+","+yP(p.value).toFixed(1)).join(" "); });
+    const range=mx-mn,step=range>200?50:range>50?20:range>20?10:5;
+    const yTicks=[];
+    for(let v=Math.ceil(mn/step)*step;v<=mx;v+=step) yTicks.push({v,y:yP(v)});
+    const n=Math.min(5,portSeries.length);
+    const xTicks=[];
+    for(let i=0;i<n;i++){ const idx=Math.floor(i*(portSeries.length-1)/(n-1)); xTicks.push({date:portSeries[idx].date,x:xP(portSeries[idx].date)}); }
+    const portRet=portSeries.length>=2?((portSeries[portSeries.length-1].value/portSeries[0].value)-1)*100:0;
+    return {W,H,PL,PR,PT,PB,cW,cH,portPath,areaPath,bPaths,yTicks,xTicks,xP,yP,portRet,mn,mx};
+  },[portSeries,benchSeries]);
+
+  const portRet = portSeries.length>=2?((portSeries[portSeries.length-1].value/portSeries[0].value)-1)*100:0;
+
+  const onMove = useCallback((e)=>{
+    if(!chart||!svgRef.current||!portSeries.length) return;
+    const rect=svgRef.current.getBoundingClientRect();
+    const cx=e.touches?e.touches[0].clientX:e.clientX;
+    const prog=Math.max(0,Math.min(1,(cx-rect.left)/rect.width*chart.W-chart.PL)/chart.cW);
+    const idx=Math.round(prog*(portSeries.length-1));
+    const pt=portSeries[Math.max(0,Math.min(idx,portSeries.length-1))];
+    if(!pt) return;
+    const bv={};
+    Object.entries(benchSeries).forEach(([id,s])=>{ const bi=Math.round(prog*(s.length-1)); bv[id]=s[Math.max(0,Math.min(bi,s.length-1))]&&s[Math.max(0,Math.min(bi,s.length-1))].value; });
+    setTooltip({pt,bv,x:chart.xP(pt.date),y:chart.yP(pt.norm)});
+  },[chart,portSeries,benchSeries]);
+
+  return (
+    <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:16,padding:20,marginBottom:20}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+        <span style={{fontSize:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)"}}>Portfolio Growth</span>
+        <span style={{fontFamily:"var(--mono)",fontSize:18,fontWeight:800,color:portRet>=0?"var(--pos)":"var(--neg)"}}>{portSeries.length>=2?fPct(portRet):"—"}</span>
       </div>
-      <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap",fontSize:12,color:"var(--muted)"}}>
-        <Icon d={I.bell} size={13}/> Auto:
-        {[0,5,15,30,60].map(m=><button key={m} onClick={()=>setAutoMin(m)} style={{padding:"3px 9px",borderRadius:12,fontSize:11,fontWeight:600,cursor:"pointer",border:"1px solid",fontFamily:"inherit",borderColor:autoMin===m?"var(--accent)":"var(--border)",background:autoMin===m?"var(--accent)":"transparent",color:autoMin===m?"#fff":"var(--muted)"}}>{m===0?"ปิด":m+"m"}</button>)}
-        {cd!==null&&<span style={{fontFamily:"var(--mono)",fontSize:12,color:"var(--accent2)",fontWeight:600}}>{fcd(cd)}</span>}
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:10}}>
+        {PERIODS.map(p=><button key={p.l} onClick={()=>setPeriod(p.l)} style={{padding:"3px 11px",borderRadius:16,fontSize:12,fontWeight:700,cursor:"pointer",border:"1px solid",borderColor:period===p.l?"var(--accent)":"var(--border)",background:period===p.l?"var(--accent)":"transparent",color:period===p.l?"#fff":"var(--muted)",fontFamily:"inherit"}}>{p.l}</button>)}
       </div>
+      <div style={{display:"flex",gap:6,flexWrap:"wrap",marginBottom:12,alignItems:"center"}}>
+        <span style={{fontSize:11,color:"var(--muted)",fontWeight:600}}>เทียบกับ:</span>
+        {BENCHMARKS.map(b=><button key={b.id} onClick={()=>setBenches(p=>p.includes(b.id)?p.filter(x=>x!==b.id):[...p,b.id])} style={{padding:"2px 9px",borderRadius:14,fontSize:11,fontWeight:600,cursor:"pointer",border:"1px solid",borderColor:benches.includes(b.id)?b.col:"var(--border)",background:benches.includes(b.id)?b.col+"22":"transparent",color:benches.includes(b.id)?b.col:"var(--muted)",fontFamily:"inherit"}}>{b.label}</button>)}
+      </div>
+      {portSeries.length<2
+        ? <div style={{textAlign:"center",padding:"40px 0",color:"var(--muted)",fontSize:13}}>เพิ่มสินทรัพย์พร้อมวันที่ซื้อเพื่อดูกราฟ</div>
+        : <div style={{position:"relative"}}>
+            <svg ref={svgRef} viewBox={"0 0 "+chart.W+" "+chart.H} style={{width:"100%",height:"auto",display:"block",cursor:"crosshair"}} onMouseMove={onMove} onMouseLeave={()=>setTooltip(null)} onTouchMove={onMove} onTouchEnd={()=>setTooltip(null)}>
+              <defs>
+                <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={portRet>=0?"#4ade80":"#f87171"} stopOpacity="0.25"/>
+                  <stop offset="100%" stopColor={portRet>=0?"#4ade80":"#f87171"} stopOpacity="0.02"/>
+                </linearGradient>
+                <clipPath id="cc"><rect x={chart.PL} y={chart.PT} width={chart.cW} height={chart.cH}/></clipPath>
+              </defs>
+              {chart.yTicks.map((t,i)=><g key={i}><line x1={chart.PL} y1={t.y} x2={chart.PL+chart.cW} y2={t.y} stroke="#1e2d4a" strokeWidth="1"/><text x={chart.PL-5} y={t.y+4} textAnchor="end" fill="var(--muted)" fontSize="9">{t.v.toFixed(0)}</text></g>)}
+              {chart.xTicks.map((t,i)=><text key={i} x={t.x} y={chart.PT+chart.cH+20} textAnchor="middle" fill="var(--muted)" fontSize="9">{new Date(t.date).toLocaleDateString("th-TH",{month:"short",year:"2-digit"})}</text>)}
+              <line x1={chart.PL} y1={chart.yP(100)} x2={chart.PL+chart.cW} y2={chart.yP(100)} stroke="#334155" strokeWidth="1" strokeDasharray="4,3"/>
+              {Object.entries(chart.bPaths).map(([id,path])=>{ const b=BENCHMARKS.find(x=>x.id===id); return <path key={id} d={path} fill="none" stroke={b.col} strokeWidth="1.5" strokeDasharray="5,3" clipPath="url(#cc)" opacity="0.8"/>; })}
+              <path d={chart.areaPath} fill="url(#pg)" clipPath="url(#cc)"/>
+              <path d={chart.portPath} fill="none" stroke={portRet>=0?"var(--pos)":"var(--neg)"} strokeWidth="2.5" clipPath="url(#cc)" strokeLinejoin="round"/>
+              {tooltip&&<>
+                <line x1={tooltip.x} y1={chart.PT} x2={tooltip.x} y2={chart.PT+chart.cH} stroke="rgba(255,255,255,.2)" strokeWidth="1"/>
+                <circle cx={tooltip.x} cy={tooltip.y} r="4" fill={portRet>=0?"var(--pos)":"var(--neg)"} stroke="#fff" strokeWidth="1.5"/>
+              </>}
+            </svg>
+            {tooltip&&<div style={{position:"absolute",top:16,left:tooltip.x>chart.W*0.55?"auto":(tooltip.x/chart.W*100)+"%",right:tooltip.x>chart.W*0.55?"4%":"auto",background:"rgba(13,21,37,.95)",border:"1px solid var(--border)",borderRadius:10,padding:"10px 14px",minWidth:150,pointerEvents:"none",fontSize:12}}>
+              <div style={{color:"var(--muted)",fontSize:10,marginBottom:5,fontWeight:600}}>{new Date(tooltip.pt.date).toLocaleDateString("th-TH",{day:"numeric",month:"short",year:"numeric"})}</div>
+              <div style={{display:"flex",gap:6,marginBottom:3,alignItems:"center"}}><span style={{color:"var(--pos)"}}>◆</span><span style={{flex:1}}>พอร์ต</span><span style={{fontFamily:"var(--mono)",fontWeight:700,color:tooltip.pt.norm>=100?"var(--pos)":"var(--neg)"}}>{fPct(tooltip.pt.norm-100)}</span></div>
+              {Object.entries(tooltip.bv).map(([id,v])=>{ const b=BENCHMARKS.find(x=>x.id===id); return v!=null?<div key={id} style={{display:"flex",gap:6,alignItems:"center"}}><span style={{color:b.col}}>◆</span><span style={{flex:1,fontSize:11}}>{b.label}</span><span style={{fontFamily:"var(--mono)",fontWeight:700,fontSize:11,color:v>=100?"var(--pos)":"var(--neg)"}}>{fPct(v-100)}</span></div>:null; })}
+            </div>}
+          </div>}
+      <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:8,paddingTop:8,borderTop:"1px solid var(--border)"}}>
+        <div style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"var(--muted)"}}><span style={{width:12,height:3,background:portRet>=0?"var(--pos)":"var(--neg)",borderRadius:2,display:"inline-block"}}/> พอร์ตคุณ</div>
+        {benches.map(id=>{ const b=BENCHMARKS.find(x=>x.id===id); const bs=benchSeries[id]; if(!b||!bs) return null; const r=((bs[bs.length-1]&&bs[bs.length-1].value||100)/100-1)*100; return <div key={id} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"var(--muted)"}}><span style={{width:12,height:2,background:b.col,borderRadius:2,display:"inline-block",opacity:.8}}/>{b.label} <span style={{fontFamily:"var(--mono)",fontSize:10,color:r>=0?"var(--pos)":"var(--neg)"}}>{fPct(r)}</span></div>; })}
+      </div>
+      <div style={{fontSize:10,color:"var(--muted)",marginTop:6}}>* กราฟพอร์ตคำนวณจากราคาปัจจุบัน | Benchmark ใช้ผลตอบแทนเฉลี่ย</div>
     </div>
-    <button onClick={onUpdate} disabled={status==="loading"} style={{display:"inline-flex",alignItems:"center",gap:7,background:"linear-gradient(135deg,#3b82f6,#6366f1)",color:"#fff",border:"none",padding:"9px 18px",borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap",opacity:status==="loading"?0.6:1}}>
-      <Icon d={I.refresh} size={15}/> {status==="loading"?"กำลังดึง...":"อัพเดทราคา"}
-    </button>
-  </div>;
+  );
 };
 
-// ── Sync Bar ──────────────────────────────────────────────────────────────────
-const SyncBar = ({connected, status, msg, lastSync, onSave, onLoad, onSync, onSetup}) => (
-  <div className="panel" style={{marginBottom:14}}>
-    <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap",flex:1}}>
-      <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,fontWeight:600}}>
-        <span style={{fontSize:10,color:connected?"var(--positive)":"var(--muted)"}}>●</span>
-        <span style={{color:connected?"var(--text)":"var(--muted)"}}>{connected?"Google Sheets":"ยังไม่เชื่อมต่อ"}</span>
+// ── DCA Lot helper ─────────────────────────────────────────────────────────────
+const calcDCA = (lots) => {
+  const v=lots.filter(l=>l.qty&&l.price&&!isNaN(l.qty)&&!isNaN(l.price));
+  if(!v.length) return {qty:0,avgCost:0};
+  const tq=v.reduce((s,l)=>s+parseFloat(l.qty),0),tc=v.reduce((s,l)=>s+parseFloat(l.qty)*parseFloat(l.price),0);
+  return {qty:tq,avgCost:tc/tq};
+};
+const newLot = ()=>({id:Date.now()+Math.random(),qty:"",price:"",date:new Date().toISOString().slice(0,10)});
+
+// ── Add/Edit Modal ─────────────────────────────────────────────────────────────
+const AssetModal = ({asset,onSave,onClose}) => {
+  const [mode,setMode] = useState(asset&&asset.dcaLots&&asset.dcaLots.length>1?"dca":"manual");
+  const [info,setInfo] = useState({name:asset&&asset.name||"",ticker:asset&&asset.ticker||"",type:asset&&asset.type||"หุ้น",currentPrice:asset?String(asset.currentPrice):"",currency:asset&&asset.currency||"USD",sector:asset&&asset.sector||"",note:asset&&asset.note||""});
+  const [mQty,setMQty] = useState(asset?String(asset.qty):"");
+  const [mAvg,setMAvg] = useState(asset?String(asset.avgCost):"");
+  const [lots,setLots] = useState(asset&&asset.dcaLots&&asset.dcaLots.length?asset.dcaLots.map(l=>({...l,id:l.id||Date.now()+Math.random()})):[newLot(),newLot()]);
+  const si=(k,v)=>setInfo(f=>({...f,[k]:v}));
+  const sl=(id,k,v)=>setLots(ls=>ls.map(l=>l.id===id?{...l,[k]:v}:l));
+  const dca=calcDCA(lots);
+  const qty=mode==="dca"?dca.qty:parseFloat(mQty)||0;
+  const avg=mode==="dca"?dca.avgCost:parseFloat(mAvg)||0;
+  const ok=info.name&&info.ticker&&info.currentPrice&&qty>0&&avg>0;
+  const save=()=>{ if(!ok) return; onSave({...info,qty,avgCost:avg,currentPrice:parseFloat(info.currentPrice),dcaLots:mode==="dca"?lots.filter(l=>l.qty&&l.price):null,dateAdded:asset&&asset.dateAdded||new Date().toISOString().slice(0,10)}); };
+  const is={background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"8px 10px",borderRadius:7,fontSize:13,fontFamily:"inherit",outline:"none",width:"100%"};
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20,backdropFilter:"blur(4px)"}} onClick={onClose}>
+      <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:20,width:"100%",maxWidth:540,maxHeight:"90vh",display:"flex",flexDirection:"column",overflow:"hidden"}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 22px",borderBottom:"1px solid var(--border)",fontWeight:700,fontSize:15}}>
+          <span>{asset?"แก้ไขสินทรัพย์":"เพิ่มสินทรัพย์ใหม่"}</span>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:4,display:"flex"}}><Ic d={I.x} size={18}/></button>
+        </div>
+        <div style={{padding:22,overflowY:"auto",flex:1,display:"flex",flexDirection:"column",gap:12}}>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            {[["name","ชื่อสินทรัพย์"],["ticker","Ticker"]].map(([k,lb])=><div key={k}><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>{lb}</div><input value={info[k]} onChange={e=>si(k,k==="ticker"?e.target.value.toUpperCase():e.target.value)} style={is}/></div>)}
+            <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>ประเภท</div><select value={info.type} onChange={e=>si("type",e.target.value)} style={is}>{TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
+            <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>สกุลเงิน</div><select value={info.currency} onChange={e=>si("currency",e.target.value)} style={is}>{CCYS.map(c=><option key={c}>{c}</option>)}</select></div>
+            <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>ราคาปัจจุบัน</div><input type="number" value={info.currentPrice} onChange={e=>si("currentPrice",e.target.value)} style={is}/></div>
+            <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>Sector</div><input value={info.sector} onChange={e=>si("sector",e.target.value)} style={is}/></div>
+            <div style={{gridColumn:"1/-1"}}><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>หมายเหตุ</div><input value={info.note} onChange={e=>si("note",e.target.value)} style={is}/></div>
+          </div>
+          <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",textTransform:"uppercase",letterSpacing:".05em"}}>ต้นทุน</div>
+          <div style={{display:"flex",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:8,overflow:"hidden"}}>
+            {["manual","dca"].map(m=><button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:"7px 10px",fontSize:12,fontWeight:600,border:"none",background:mode===m?"var(--accent)":"transparent",color:mode===m?"#fff":"var(--muted)",cursor:"pointer",fontFamily:"inherit"}}>{m==="manual"?"กรอกเอง":"DCA หลายครั้ง"}</button>)}
+          </div>
+          {mode==="manual"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+            <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>จำนวน</div><input type="number" value={mQty} onChange={e=>setMQty(e.target.value)} style={is}/></div>
+            <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>ต้นทุนเฉลี่ย</div><input type="number" value={mAvg} onChange={e=>setMAvg(e.target.value)} style={is}/></div>
+          </div>}
+          {mode==="dca"&&<div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 28px",gap:"5px 7px",marginBottom:5}}>
+              {["จำนวน","ราคา","วันที่",""].map((h,i)=><span key={i} style={{fontSize:10,color:"var(--muted)",fontWeight:700}}>{h}</span>)}
+            </div>
+            {lots.map(lt=><div key={lt.id} style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 28px",gap:"5px 7px",marginBottom:5,alignItems:"center"}}>
+              <input type="number" value={lt.qty} onChange={e=>sl(lt.id,"qty",e.target.value)} placeholder="0" style={is}/>
+              <input type="number" value={lt.price} onChange={e=>sl(lt.id,"price",e.target.value)} placeholder="0.00" style={is}/>
+              <input type="date" value={lt.date} onChange={e=>sl(lt.id,"date",e.target.value)} style={{...is,fontSize:11}}/>
+              <button onClick={()=>setLots(ls=>ls.length>1?ls.filter(l=>l.id!==lt.id):ls)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:4,display:"flex",alignItems:"center"}}><Ic d={I.x} size={13}/></button>
+            </div>)}
+            <button onClick={()=>setLots(ls=>[...ls,newLot()])} style={{background:"transparent",border:"1px dashed var(--border)",color:"var(--muted)",padding:"5px 12px",borderRadius:7,fontSize:12,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:4}}><Ic d={I.plus} size={12}/> เพิ่มรอบซื้อ</button>
+            {dca.qty>0&&<div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:7,padding:"9px 12px",fontSize:12,display:"flex",gap:16,flexWrap:"wrap",marginTop:8}}>
+              <span style={{color:"var(--muted)"}}>รวม: <strong style={{color:"var(--text)",fontFamily:"var(--mono)"}}>{f2(dca.qty,6)}</strong></span>
+              <span style={{color:"var(--muted)"}}>เฉลี่ย: <strong style={{color:"var(--text)",fontFamily:"var(--mono)"}}>${f2(dca.avgCost)}</strong></span>
+            </div>}
+          </div>}
+        </div>
+        <div style={{padding:"14px 22px",borderTop:"1px solid var(--border)",display:"flex",justifyContent:"flex-end",gap:10}}>
+          <button onClick={onClose} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--muted)",padding:"8px 16px",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>ยกเลิก</button>
+          <button onClick={save} disabled={!ok} style={{background:"var(--accent)",color:"#fff",border:"none",padding:"8px 18px",borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",opacity:ok?1:.5,display:"flex",alignItems:"center",gap:6}}><Ic d={I.check} size={15}/> บันทึก</button>
+        </div>
       </div>
-      {status!=="idle"&&<span style={{fontSize:12,color:status==="loading"?"var(--warning)":status==="done"?"var(--positive)":"var(--negative)"}}>{msg}</span>}
-      {status==="idle"&&connected&&<span style={{fontSize:11,color:"var(--muted)"}}>Last sync: {ago(lastSync)}</span>}
     </div>
-    <div style={{display:"flex",gap:6,flexShrink:0}}>
-      {connected&&<>
-        <button onClick={onSync} disabled={status==="loading"} className="btn-sm-blue">⇄ Sync</button>
-        <button onClick={onSave} disabled={status==="loading"} className="btn-sm">↑ Save</button>
-        <button onClick={onLoad} disabled={status==="loading"} className="btn-sm">↓ Load</button>
-      </>}
-      <button onClick={onSetup} className="btn-sm">{connected?"⚙️":"🔗 เชื่อม Sheets"}</button>
+  );
+};
+
+// ── Confirm Delete ─────────────────────────────────────────────────────────────
+const ConfirmDialog = ({name,onConfirm,onCancel}) => (
+  <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:300,padding:20,backdropFilter:"blur(4px)"}} onClick={onCancel}>
+    <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:20,width:"100%",maxWidth:320,padding:"28px 24px",textAlign:"center",display:"flex",flexDirection:"column",gap:12}} onClick={e=>e.stopPropagation()}>
+      <div style={{fontSize:34}}>🗑️</div>
+      <div style={{fontWeight:800,fontSize:16}}>ยืนยันการลบ</div>
+      <div style={{fontSize:13,color:"var(--muted)",lineHeight:1.6}}>ต้องการลบ <strong style={{color:"var(--text)"}}>{name}</strong> ออกจากพอร์ตหรือไม่?</div>
+      <div style={{display:"flex",gap:10,justifyContent:"center",marginTop:4}}>
+        <button onClick={onCancel} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--muted)",padding:"8px 18px",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>ยกเลิก</button>
+        <button onClick={onConfirm} style={{background:"#ef4444",color:"#fff",border:"none",padding:"8px 20px",borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}><Ic d={I.trash} size={14}/> ลบ</button>
+      </div>
     </div>
   </div>
 );
 
-// ── DCA Calculator ────────────────────────────────────────────────────────────
-const DCACalc = ({asset, usdThb}) => {
-  const [amt,setAmt]=useState("100"); const [months,setMonths]=useState("12");
-  const [freq,setFreq]=useState("monthly"); const [retPct,setRetPct]=useState("10");
-  if(!asset) return null;
-  const IS = {width:"100%",background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"8px 10px",borderRadius:7,fontSize:13,fontFamily:"inherit",outline:"none"};
-  const be = asset.avgCost;
-  const toBreakEven = ((be-asset.currentPrice)/asset.currentPrice)*100;
-  const a=parseFloat(amt)||0, m=parseInt(months)||0, r=(parseFloat(retPct)||0)/100/12;
-  const periods = m*(freq==="daily"?30:freq==="weekly"?4.33:1);
-  const perPeriod = a/(freq==="daily"?30:freq==="weekly"?4.33:1);
-  const fv = r>0 ? perPeriod*((Math.pow(1+r,periods)-1)/r) : perPeriod*periods;
-  const newQty = a*m/asset.currentPrice;
-  const newCost = (asset.qty*asset.avgCost+a*m)/(asset.qty+newQty);
-  return <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
-    <div className="card">
-      <div className="card-title"><Icon d={I.trend} size={13}/> Break-even</div>
-      <div style={{display:"flex",flexDirection:"column",gap:10}}>
-        {[["ต้นทุนเฉลี่ย","$"+fmt(asset.avgCost),"var(--warning)"],["ราคาปัจจุบัน","$"+fmt(asset.currentPrice),null],["ต้องขึ้น/ลง",pct(toBreakEven),toBreakEven>0?"var(--positive)":"var(--negative)"]].map(([l,v,c])=><div key={l} style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
-          <span style={{color:"var(--muted)"}}>{l}</span><span style={{fontFamily:"var(--mono)",fontWeight:600,color:c||"var(--text)"}}>{v}</span>
-        </div>)}
-        <div style={{background:"var(--border)",borderRadius:6,height:8,overflow:"hidden",marginTop:4}}>
-          <div style={{width:Math.min(100,asset.currentPrice/asset.avgCost*100)+"%",height:"100%",borderRadius:6,background:asset.currentPrice>=asset.avgCost?"var(--positive)":"linear-gradient(90deg,#f87171,#fbbf24)"}}/>
+// ── Backup Modal ───────────────────────────────────────────────────────────────
+const BackupModal = ({assets,onClose,onRestore}) => {
+  const [st,setSt]=useState("idle"),[msg,setMsg]=useState("");
+  const exp=()=>{ const d="data:application/json;charset=utf-8,"+encodeURIComponent(JSON.stringify({version:1,exportedAt:new Date().toISOString(),assets},null,2)); const a=document.createElement("a");a.href=d;a.download="portfolio_"+new Date().toISOString().slice(0,10)+".json";document.body.appendChild(a);a.click();document.body.removeChild(a); setSt("ok");setMsg("ดาวน์โหลดสำเร็จ"); };
+  const imp=(e)=>{ const f=e.target.files[0];if(!f) return; setSt("loading"); const r=new FileReader(); r.onload=(ev)=>{ try{ const d=JSON.parse(ev.target.result); if(d.assets){onRestore(d.assets);setSt("ok");setMsg("นำเข้า "+d.assets.length+" รายการสำเร็จ");}else{setSt("err");setMsg("ไฟล์ไม่ถูกต้อง");} }catch{setSt("err");setMsg("อ่านไฟล์ไม่ได้");} }; r.readAsText(f); };
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20,backdropFilter:"blur(4px)"}} onClick={onClose}>
+      <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:20,width:"100%",maxWidth:420,overflow:"hidden"}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 22px",borderBottom:"1px solid var(--border)",fontWeight:700,fontSize:15}}>
+          <span>🗄️ สำรอง / กู้คืน</span>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:4,display:"flex"}}><Ic d={I.x} size={18}/></button>
         </div>
-        <div style={{background:"rgba(59,130,246,.07)",padding:"8px 12px",borderRadius:8,fontSize:12,color:"var(--muted)"}}>
-          มูลค่า (THB): <strong style={{color:"var(--text)"}}>฿{fmt(asset.qty*asset.currentPrice*usdThb,0)}</strong>
-        </div>
-      </div>
-    </div>
-    <div className="card">
-      <div className="card-title"><Icon d={I.calc} size={13}/> DCA Calculator</div>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        {[["ซื้อต่อเดือน (USD)",amt,setAmt,"number"],["นานกี่เดือน",months,setMonths,"number"],["% return/ปี (คาด)",retPct,setRetPct,"number"]].map(([l,v,s,t])=><div key={l}>
-          <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:4}}>{l}</div>
-          <input type={t} value={v} onChange={e=>s(e.target.value)} style={IS}/>
-        </div>)}
-        <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:4}}>ความถี่</div>
-        <select value={freq} onChange={e=>setFreq(e.target.value)} style={IS}>
-          <option value="daily">ทุกวัน</option><option value="weekly">ทุกสัปดาห์</option><option value="monthly">ทุกเดือน</option>
-        </select>
-        {a>0&&m>0&&<div style={{marginTop:6,borderTop:"1px solid var(--border)",paddingTop:10,display:"flex",flexDirection:"column",gap:6}}>
-          {[["ลงทุนเพิ่ม","$"+fmt(a*m),null],["ต้นทุนเฉลี่ยใหม่","$"+fmt(newCost),"var(--warning)"],["มูลค่าคาด","$"+fmt(fv+asset.qty*asset.currentPrice),"var(--positive)"]].map(([l,v,c])=><div key={l} style={{display:"flex",justifyContent:"space-between",fontSize:12}}>
-            <span style={{color:"var(--muted)"}}>{l}</span><span style={{fontFamily:"var(--mono)",fontWeight:700,color:c||"var(--text)"}}>{v}</span>
-          </div>)}
-        </div>}
-      </div>
-    </div>
-  </div>;
-};
-
-// ── Cost vs Market Chart ───────────────────────────────────────────────────────
-const CostChart = ({asset}) => {
-  const lots = (asset?.dcaLots||[]).filter(l=>l.qty&&l.price).sort((a,b)=>a.date.localeCompare(b.date));
-  if(lots.length<2) return <div className="card"><div className="card-title"><Icon d={I.act} size={13}/> Cost vs Market Timeline</div><div style={{textAlign:"center",padding:"32px 0",color:"var(--muted)",fontSize:13}}>ต้องการ DCA lots ≥ 2 รายการ</div></div>;
-  let rq=0,rc=0;
-  const pts = lots.map(l=>{ rq+=parseFloat(l.qty); rc+=parseFloat(l.qty)*parseFloat(l.price); return {date:l.date,buy:parseFloat(l.price),avg:rc/rq,qty:parseFloat(l.qty)}; });
-  const W=800,H=240,PL=55,PR=10,PT=10,PB=32,cW=W-PL-PR,cH=H-PT-PB;
-  const allP=[...pts.flatMap(p=>[p.buy,p.avg]),asset.currentPrice];
-  const minY=Math.min(...allP)*0.94,maxY=Math.max(...allP)*1.06;
-  const minTs=new Date(pts[0].date).getTime(),maxTs=Date.now();
-  const xP=d=>PL+((new Date(d).getTime()-minTs)/(maxTs-minTs||1))*cW;
-  const yP=v=>PT+(1-(v-minY)/(maxY-minY||1))*cH;
-  const avgPath=pts.map((p,i)=>(i===0?"M":"L")+xP(p.date).toFixed(1)+","+yP(p.avg).toFixed(1)).join(" ");
-  const cpY=yP(asset.currentPrice).toFixed(1);
-  const rng=maxY-minY; const step=rng>50000?10000:rng>10000?5000:rng>1000?500:50;
-  const yTicks=[]; for(let v=Math.ceil(minY/step)*step;v<=maxY;v+=step) yTicks.push({v,y:yP(v)});
-  const maxQty=Math.max(...pts.map(p=>p.qty));
-  return <div className="card">
-    <div className="card-title" style={{marginBottom:8}}><Icon d={I.act} size={13}/> Cost vs Market Timeline — {asset.ticker}</div>
-    <div style={{display:"flex",gap:14,marginBottom:10,flexWrap:"wrap"}}>
-      {[["─ ต้นทุนเฉลี่ย","#fbbf24"],["⬤ ราคาซื้อ (น้ำเงิน=ดีกว่าค่าเฉลี่ย)","#60a5fa"],["- - ราคาปัจจุบัน","#4ade80"]].map(([l,c])=><div key={l} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"var(--muted)"}}><span style={{color:c}}>{l.split(" ")[0]}</span> {l.split(" ").slice(1).join(" ")}</div>)}
-    </div>
-    <svg viewBox={"0 0 "+W+" "+H} style={{width:"100%",height:"auto",display:"block"}}>
-      <defs><clipPath id="cc"><rect x={PL} y={PT} width={cW} height={cH}/></clipPath></defs>
-      {yTicks.map((t,i)=><g key={i}><line x1={PL} y1={t.y} x2={PL+cW} y2={t.y} stroke="#1e2d4a" strokeWidth="1"/><text x={PL-5} y={t.y+4} textAnchor="end" fill="#5a7a9a" fontSize="9">{t.v>=1000?(t.v/1000).toFixed(0)+"k":t.v}</text></g>)}
-      <line x1={PL} y1={cpY} x2={PL+cW} y2={cpY} stroke="#4ade80" strokeWidth="1.5" strokeDasharray="5,3" clipPath="url(#cc)"/>
-      <text x={PL+cW-2} y={parseFloat(cpY)-4} textAnchor="end" fill="#4ade80" fontSize="9" fontWeight="700">${fmt(asset.currentPrice)}</text>
-      <path d={avgPath} fill="none" stroke="#fbbf24" strokeWidth="2" clipPath="url(#cc)"/>
-      {pts.map((p,i)=><circle key={i} cx={xP(p.date)} cy={yP(p.buy)} r={3+(p.qty/maxQty)*5} fill={p.buy>p.avg?"rgba(248,113,113,.75)":"rgba(96,165,250,.75)"} stroke={p.buy>p.avg?"#f87171":"#60a5fa"} strokeWidth="1.5" clipPath="url(#cc)"/>)}
-    </svg>
-  </div>;
-};
-
-// ── Goals Tab ─────────────────────────────────────────────────────────────────
-const GoalsTab = ({assets, goals, saveGoal, deleteGoal, usdThb}) => {
-  const [form,setForm]=useState({name:"",targetUSD:"",deadline:"",note:""});
-  const [showForm,setShowForm]=useState(false);
-  const [editId,setEditId]=useState(null);
-  const totalValue = assets.reduce((s,a)=>s+a.qty*a.currentPrice,0);
-  const IS={width:"100%",background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"9px 12px",borderRadius:8,fontSize:13,fontFamily:"inherit",outline:"none"};
-  const save=()=>{ if(!form.name||!form.targetUSD) return; saveGoal({...form,id:editId||null}); setForm({name:"",targetUSD:"",deadline:"",note:""}); setShowForm(false); setEditId(null); };
-  return <div style={{display:"flex",flexDirection:"column",gap:16}}>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
-      <div className="stat-card"><div className="stat-label">มูลค่าพอร์ตปัจจุบัน</div><div className="stat-val">{fmtUSD(totalValue)}</div><div className="stat-sub">≈ ฿{fmt(totalValue*usdThb,0)}</div></div>
-      <div className="stat-card" style={{cursor:"pointer",borderColor:showForm?"var(--accent)":"var(--border)"}} onClick={()=>{setEditId(null);setForm({name:"",targetUSD:"",deadline:"",note:""});setShowForm(true);}}>
-        <div className="stat-label">เพิ่มเป้าหมาย</div><div className="stat-val" style={{color:"var(--accent)"}}>+</div><div className="stat-sub">ตั้งเป้าหมายใหม่</div>
-      </div>
-    </div>
-    {showForm&&<div className="card">
-      <div className="card-title"><Icon d={I.target} size={13}/> {editId?"แก้ไข":"เพิ่ม"}เป้าหมาย</div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-        <div style={{gridColumn:"1/-1"}}><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>ชื่อเป้าหมาย</div><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} placeholder="เช่น ซื้อบ้าน, เกษียณ" style={IS}/></div>
-        <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>เป้าหมาย (USD)</div><input type="number" value={form.targetUSD} onChange={e=>setForm(f=>({...f,targetUSD:e.target.value}))} placeholder="100000" style={IS}/></div>
-        <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>วันที่เป้าหมาย</div><input type="date" value={form.deadline} onChange={e=>setForm(f=>({...f,deadline:e.target.value}))} style={IS}/></div>
-        <div style={{gridColumn:"1/-1"}}><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>หมายเหตุ</div><input value={form.note} onChange={e=>setForm(f=>({...f,note:e.target.value}))} placeholder="รายละเอียด..." style={IS}/></div>
-      </div>
-      <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:14}}>
-        <button className="btn-ghost" onClick={()=>setShowForm(false)}>ยกเลิก</button>
-        <button className="btn-primary" onClick={save}><Icon d={I.check} size={15}/> บันทึก</button>
-      </div>
-    </div>}
-    {goals.length===0&&!showForm&&<div className="card"><div style={{textAlign:"center",padding:"40px 20px",color:"var(--muted)"}}><div style={{fontSize:32,marginBottom:12}}>🎯</div><div style={{fontWeight:700,marginBottom:6}}>ยังไม่มีเป้าหมาย</div><button className="btn-primary" style={{marginTop:8}} onClick={()=>setShowForm(true)}><Icon d={I.plus} size={15}/> เพิ่มเป้าหมาย</button></div></div>}
-    {goals.map(g=>{
-      const target=parseFloat(g.targetUSD)||1,prog=Math.min(100,(totalValue/target)*100),rem=target-totalValue,achieved=totalValue>=target;
-      const daysLeft=g.deadline?Math.ceil((new Date(g.deadline)-new Date())/86400000):null;
-      return <div key={g.id} className="card">
-        <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:14}}>
-          <div><div style={{fontWeight:800,fontSize:15}}>{achieved?"🎉":"🎯"} {g.name}{achieved&&<span style={{background:"rgba(74,222,128,.15)",color:"var(--positive)",fontSize:11,padding:"2px 8px",borderRadius:10,marginLeft:8}}>บรรลุแล้ว!</span>}</div>{g.note&&<div style={{fontSize:12,color:"var(--muted)",marginTop:3}}>{g.note}</div>}</div>
-          <div style={{display:"flex",gap:4}}><button className="icon-btn" onClick={()=>{setEditId(g.id);setForm({...g});setShowForm(true);}}><Icon d={I.edit} size={15}/></button><button className="icon-btn" style={{color:"var(--negative)"}} onClick={()=>deleteGoal(g.id)}><Icon d={I.trash} size={15}/></button></div>
-        </div>
-        <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:6}}><span style={{fontFamily:"var(--mono)",fontWeight:700}}>{fmtUSD(totalValue)} <span style={{color:"var(--muted)",fontWeight:400}}>/ {fmtUSD(target)}</span></span><span style={{fontFamily:"var(--mono)",fontWeight:800,color:achieved?"var(--positive)":"var(--accent)"}}>{prog.toFixed(1)}%</span></div>
-        <div style={{background:"var(--border)",borderRadius:8,height:12,overflow:"hidden",marginBottom:12}}>
-          <div style={{width:prog+"%",height:"100%",borderRadius:8,transition:"width .8s",background:achieved?"linear-gradient(90deg,#4ade80,#22d3ee)":prog>75?"linear-gradient(90deg,#3b82f6,#8b5cf6)":"linear-gradient(90deg,#1e3a5f,#3b82f6)"}}/>
-        </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8}}>
-          {[["ยังขาดอีก",achieved?"✓ บรรลุ!":fmtUSD(rem),achieved?"var(--positive)":"var(--warning)"],g.deadline&&["วันที่เป้า",(daysLeft<=0?"หมดเวลา":daysLeft+" วัน"),daysLeft<30&&daysLeft>0?"var(--negative)":"var(--text)"],["เป้า (THB)","฿"+fmt(target*usdThb,0),"var(--text)"]].filter(Boolean).map(([l,v,c])=><div key={l} style={{background:"var(--surface)",borderRadius:8,padding:"8px 12px"}}><div style={{fontSize:10,color:"var(--muted)"}}>{l}</div><div style={{fontFamily:"var(--mono)",fontWeight:700,fontSize:12,color:c,marginTop:3}}>{v}</div></div>)}
-        </div>
-      </div>;
-    })}
-  </div>;
-};
-
-// ── Add/Edit Modal ────────────────────────────────────────────────────────────
-const ELOT = ()=>({id:Date.now()+Math.random(),qty:"",price:"",date:new Date().toISOString().slice(0,10)});
-const AssetModal = ({asset, onSave, onClose}) => {
-  const [mode,setMode]=useState(asset?.dcaLots?.length>1?"dca":"manual");
-  const [info,setInfo]=useState({name:asset?.name||"",ticker:asset?.ticker||"",type:asset?.type||"หุ้น",currentPrice:asset?String(asset.currentPrice):"",currency:asset?.currency||"USD",sector:asset?.sector||"",note:asset?.note||""});
-  const [mQty,setMQty]=useState(asset?String(asset.qty):"");
-  const [mAvg,setMAvg]=useState(asset?String(asset.avgCost):"");
-  const [lots,setLots]=useState(asset?.dcaLots?.length?asset.dcaLots.map(l=>({...l,id:l.id||Date.now()+Math.random()})): [ELOT(),ELOT()]);
-  const dca=useMemo(()=>{ const v=lots.filter(l=>l.qty&&l.price&&!isNaN(l.qty)&&!isNaN(l.price)); if(!v.length) return {qty:0,avg:0}; const tq=v.reduce((s,l)=>s+parseFloat(l.qty),0),tc=v.reduce((s,l)=>s+parseFloat(l.qty)*parseFloat(l.price),0); return {qty:tq,avg:tc/tq}; },[lots]);
-  const qty=mode==="dca"?dca.qty:parseFloat(mQty)||0;
-  const avg=mode==="dca"?dca.avg:parseFloat(mAvg)||0;
-  const ok=info.name&&info.ticker&&info.currentPrice&&qty>0&&avg>0;
-  const IS={background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"8px 10px",borderRadius:7,fontSize:13,fontFamily:"inherit",outline:"none",width:"100%"};
-  const save=()=>{ if(!ok) return; onSave({...info,qty,avgCost:avg,currentPrice:parseFloat(info.currentPrice),dcaLots:mode==="dca"?lots.filter(l=>l.qty&&l.price):null,dateAdded:asset?.dateAdded||new Date().toISOString().slice(0,10)}); };
-  return <div className="modal-overlay" onClick={onClose}>
-    <div className="modal" onClick={e=>e.stopPropagation()}>
-      <div className="modal-header"><span>{asset?"แก้ไข":"เพิ่ม"}สินทรัพย์</span><button className="icon-btn" onClick={onClose}><Icon d={I.x}/></button></div>
-      <div className="modal-body">
-        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}>
-          {[["ชื่อ","name","text","Apple Inc."],["Ticker","ticker","text","AAPL"],["ราคาปัจจุบัน","currentPrice","number","0.00"],["Sector","sector","text","Technology"]].map(([l,k,t,ph])=><div key={k}><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>{l}</div><input type={t} value={info[k]} onChange={e=>setInfo(f=>({...f,[k]:k==="ticker"?e.target.value.toUpperCase():e.target.value}))} placeholder={ph} style={IS}/></div>)}
-          <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>ประเภท</div><select value={info.type} onChange={e=>setInfo(f=>({...f,type:e.target.value}))} style={IS}>{TYPES.map(t=><option key={t}>{t}</option>)}</select></div>
-          <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>สกุลเงิน</div><select value={info.currency} onChange={e=>setInfo(f=>({...f,currency:e.target.value}))} style={IS}>{CCYS.map(c=><option key={c}>{c}</option>)}</select></div>
-          <div style={{gridColumn:"1/-1"}}><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>หมายเหตุ</div><input value={info.note} onChange={e=>setInfo(f=>({...f,note:e.target.value}))} placeholder="กลยุทธ์..." style={IS}/></div>
-        </div>
-        <div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:8,textTransform:"uppercase",letterSpacing:".06em"}}>ต้นทุน</div>
-        <div style={{display:"flex",background:"var(--surface)",border:"1px solid var(--border)",borderRadius:8,overflow:"hidden",marginBottom:12}}>
-          {["manual","dca"].map(m=><button key={m} onClick={()=>setMode(m)} style={{flex:1,padding:"7px",fontSize:12,fontWeight:600,border:"none",background:mode===m?"var(--accent)":"transparent",color:mode===m?"#fff":"var(--muted)",cursor:"pointer",fontFamily:"inherit"}}>{m==="manual"?"กรอกตรง":"DCA (หลายรอบ)"}</button>)}
-        </div>
-        {mode==="manual"&&<div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
-          <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>จำนวน (Qty)</div><input type="number" value={mQty} onChange={e=>setMQty(e.target.value)} style={IS}/></div>
-          <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:5}}>ต้นทุนเฉลี่ย</div><input type="number" value={mAvg} onChange={e=>setMAvg(e.target.value)} style={IS}/></div>
-        </div>}
-        {mode==="dca"&&<div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 28px",gap:"4px 8px",marginBottom:6}}>
-            {["จำนวน","ราคา","วันที่",""].map((h,i)=><div key={i} style={{fontSize:10,fontWeight:700,color:"var(--muted)"}}>{h}</div>)}
+        <div style={{padding:22,display:"flex",flexDirection:"column",gap:16}}>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:6}}>💾 Export</div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={exp} style={{background:"var(--accent)",color:"#fff",border:"none",padding:"8px 14px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}><Ic d={I.down} size={14}/> JSON</button>
+              <button onClick={()=>window.open("https://drive.google.com","_blank")} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--muted)",padding:"8px 14px",borderRadius:9,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:6}}><Ic d={I.cloud} size={14}/> Google Drive</button>
+            </div>
           </div>
-          {lots.map(lot=><div key={lot.id} style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 28px",gap:"4px 8px",marginBottom:6}}>
-            <input type="number" value={lot.qty} onChange={e=>setLots(ls=>ls.map(l=>l.id===lot.id?{...l,qty:e.target.value}:l))} placeholder="0" style={IS}/>
-            <input type="number" value={lot.price} onChange={e=>setLots(ls=>ls.map(l=>l.id===lot.id?{...l,price:e.target.value}:l))} placeholder="0.00" style={IS}/>
-            <input type="date" value={lot.date} onChange={e=>setLots(ls=>ls.map(l=>l.id===lot.id?{...l,date:e.target.value}:l))} style={{...IS,fontSize:11}}/>
-            <button onClick={()=>setLots(ls=>ls.length>1?ls.filter(l=>l.id!==lot.id):ls)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:4}}><Icon d={I.x} size={13}/></button>
-          </div>)}
-          <button onClick={()=>setLots(ls=>[...ls,ELOT()])} style={{display:"inline-flex",alignItems:"center",gap:5,background:"transparent",border:"1px dashed var(--border)",color:"var(--muted)",padding:"5px 12px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}><Icon d={I.plus} size={13}/> เพิ่มรอบ</button>
-          {dca.qty>0&&<div style={{background:"var(--surface)",border:"1px solid var(--border)",borderRadius:8,padding:"10px 12px",fontSize:12,display:"flex",gap:14,flexWrap:"wrap",marginTop:8}}>
-            {[["รวม",fmt(dca.qty,4)],["ต้นทุนเฉลี่ย","$"+fmt(dca.avg)],["รวมลงทุน","$"+fmt(dca.qty*dca.avg)]].map(([l,v])=><span key={l} style={{color:"var(--muted)"}}>{l}: <strong style={{color:"var(--text)",fontFamily:"var(--mono)"}}>{v}</strong></span>)}
+          <div style={{height:1,background:"var(--border)"}}/>
+          <div>
+            <div style={{fontSize:13,fontWeight:700,marginBottom:6}}>📂 Import</div>
+            <label style={{display:"inline-flex",alignItems:"center",gap:6,background:"transparent",color:"var(--text)",border:"1px solid var(--accent)",padding:"8px 14px",borderRadius:9,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}><Ic d={I.up} size={14}/> เลือกไฟล์ JSON<input type="file" accept=".json" onChange={imp} style={{display:"none"}}/></label>
+          </div>
+          {st!=="idle"&&<div style={{padding:"10px 14px",borderRadius:8,fontSize:13,background:st==="ok"?"rgba(74,222,128,.08)":st==="err"?"rgba(248,113,113,.08)":"rgba(251,191,36,.08)",color:st==="ok"?"var(--pos)":st==="err"?"var(--neg)":"var(--warn)"}}>{st==="loading"?"⏳ กำลังอ่าน...":st==="ok"?"✅ "+msg:"❌ "+msg}</div>}
+          <div style={{background:"rgba(59,130,246,.06)",border:"1px solid rgba(59,130,246,.2)",borderRadius:9,padding:"10px 14px",fontSize:11,color:"var(--muted)",lineHeight:1.6}}>💡 บันทึก JSON ไว้ใน <strong style={{color:"var(--accent2)"}}>Google Drive</strong> เพื่อ sync ทุกอุปกรณ์</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Sheets Setup Modal ─────────────────────────────────────────────────────────
+const SheetsModal = ({onClose,initialUrl,initialToken,onSaved}) => {
+  const [url,setUrl]=useState(initialUrl||""),[token,setToken]=useState(initialToken||"");
+  const [st,setSt]=useState("idle"),[msg,setMsg]=useState("");
+  const test=async()=>{
+    if(!url||!token){setSt("err");setMsg("กรุณากรอก URL และ Token");return;}
+    setSt("testing");setMsg("กำลังทดสอบ...");
+    try{
+      const r=await fetch(url.trim()+"?action=ping&token="+encodeURIComponent(token.trim()),{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"ping",token:token.trim()})});
+      const d=await r.json();
+      if(d.ok){setSt("ok");setMsg("✅ เชื่อมต่อสำเร็จ!");}
+      else{setSt("err");setMsg("❌ "+(d.error||"Token ไม่ถูกต้อง"));}
+    }catch(e){setSt("err");setMsg("❌ "+e.message);}
+  };
+  const save=()=>{ onSaved(url.trim(),token.trim()); onClose(); };
+  const is={background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"9px 12px",borderRadius:8,fontSize:13,fontFamily:"inherit",outline:"none",width:"100%",marginTop:5};
+  return (
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20,backdropFilter:"blur(4px)"}} onClick={onClose}>
+      <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:20,width:"100%",maxWidth:460,overflow:"hidden"}} onClick={e=>e.stopPropagation()}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 22px",borderBottom:"1px solid var(--border)",fontWeight:700,fontSize:15}}>
+          <span>🔗 เชื่อมต่อ Google Sheets</span>
+          <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:4,display:"flex"}}><Ic d={I.x} size={18}/></button>
+        </div>
+        <div style={{padding:22,display:"flex",flexDirection:"column",gap:14}}>
+          <div style={{background:"rgba(59,130,246,.08)",border:"1px solid rgba(59,130,246,.2)",borderRadius:9,padding:"11px 14px",fontSize:12,color:"var(--muted)",lineHeight:1.8}}>
+            <strong style={{color:"var(--accent2)"}}>วิธีตั้งค่า:</strong><br/>
+            1. เปิด <a href="https://script.google.com" target="_blank" style={{color:"var(--accent2)"}}>script.google.com</a> → New project<br/>
+            2. วางโค้ด GoogleAppsScript.gs → แก้ SECRET_TOKEN<br/>
+            3. Deploy → New deployment → Web app → Anyone<br/>
+            4. Copy URL มาวางด้านล่าง
+          </div>
+          <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)"}}>Apps Script Web App URL</div><input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://script.google.com/macros/s/.../exec" style={is}/></div>
+          <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)"}}>Secret Token</div><input type="password" value={token} onChange={e=>setToken(e.target.value)} placeholder="YOUR_SECRET_TOKEN_HERE" style={is}/></div>
+          {st!=="idle"&&<div style={{padding:"9px 12px",borderRadius:8,fontSize:13,background:st==="ok"?"rgba(74,222,128,.08)":st==="err"?"rgba(248,113,113,.08)":"rgba(251,191,36,.08)",color:st==="ok"?"var(--pos)":st==="err"?"var(--neg)":"var(--warn)"}}>{msg}</div>}
+          <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+            <button onClick={test} disabled={st==="testing"} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--muted)",padding:"8px 14px",borderRadius:9,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>🔌 ทดสอบ</button>
+            <button onClick={save} disabled={!url||!token} style={{background:"var(--accent)",color:"#fff",border:"none",padding:"8px 18px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",opacity:url&&token?1:.5,display:"flex",alignItems:"center",gap:6}}><Ic d={I.check} size={14}/> บันทึก</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Price Log Modal ────────────────────────────────────────────────────────────
+const LogModal = ({log,onClose}) => (
+  <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.75)",display:"flex",alignItems:"center",justifyContent:"center",zIndex:200,padding:20,backdropFilter:"blur(4px)"}} onClick={onClose}>
+    <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:20,width:"100%",maxWidth:500,maxHeight:"80vh",display:"flex",flexDirection:"column",overflow:"hidden"}} onClick={e=>e.stopPropagation()}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"16px 22px",borderBottom:"1px solid var(--border)",fontWeight:700,fontSize:15}}>
+        <span>📋 ประวัติอัพเดทราคา</span>
+        <button onClick={onClose} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:4,display:"flex"}}><Ic d={I.x} size={18}/></button>
+      </div>
+      <div style={{padding:20,overflowY:"auto",flex:1}}>
+        {log.length===0?<p style={{color:"var(--muted)",textAlign:"center",padding:"30px 0",fontSize:13}}>ยังไม่มีประวัติ</p>
+        :log.slice().reverse().map((e,i)=><div key={i} style={{borderBottom:"1px solid var(--border)",padding:"10px 0",fontSize:13}}>
+          <div style={{color:"var(--muted)",fontSize:10,marginBottom:4,fontWeight:600}}>{new Date(e.time).toLocaleString("th-TH")}</div>
+          <div style={{display:"flex",flexWrap:"wrap",gap:7}}>{Object.entries(e.prices).map(([t,p])=><span key={t} style={{background:"var(--surface)",padding:"2px 8px",borderRadius:5,fontFamily:"var(--mono)",fontSize:11}}>{t}: {f2(p)}</span>)}</div>
+        </div>)}
+      </div>
+    </div>
+  </div>
+);
+
+// ── Tools Tab ──────────────────────────────────────────────────────────────────
+const ToolsTab = ({assets,usdThb}) => {
+  const [aid,setAid]=useState(assets[0]&&assets[0].id||null);
+  const [amt,setAmt]=useState("100"),[freq,setFreq]=useState("monthly"),[mo,setMo]=useState("12"),[ret,setRet]=useState("10");
+  const a=assets.find(x=>x.id===aid)||assets[0];
+  const is={background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"8px 10px",borderRadius:7,fontSize:13,fontFamily:"inherit",outline:"none",width:"100%"};
+  const be=useMemo(()=>{ if(!a) return null; return {be:a.avgCost,pct:((a.avgCost-a.currentPrice)/a.currentPrice)*100,bar:Math.min(100,(a.currentPrice/a.avgCost)*100)}; },[a]);
+  const dcaR=useMemo(()=>{
+    if(!a||!amt||!mo) return null;
+    const amount=parseFloat(amt)||0,months=parseInt(mo)||0,r=(parseFloat(ret)/100)/12;
+    const fv=r>0?amount*((Math.pow(1+r,months)-1)/r):amount*months;
+    const newQty=amount*months/(a.currentPrice||1),tq=a.qty+newQty,tc=a.qty*a.avgCost+amount*months;
+    return {invested:amount*months,newQty,newAvg:tc/tq,projected:fv+a.qty*a.currentPrice,projRet:((fv+a.qty*a.currentPrice)/tc-1)*100};
+  },[a,amt,freq,mo,ret]);
+
+  // Cost vs Market chart
+  const lots=(a&&a.dcaLots&&a.dcaLots.filter(l=>l.qty&&l.price))||[];
+  const sorted=[...lots].sort((a,b)=>a.date.localeCompare(b.date));
+  let rq=0,rc=0;
+  const cvmPts=sorted.map(l=>{ rq+=parseFloat(l.qty);rc+=parseFloat(l.qty)*parseFloat(l.price); return {date:l.date,buy:parseFloat(l.price),avg:rc/rq,qty:parseFloat(l.qty)}; });
+
+  if(!a) return <div style={{textAlign:"center",padding:"60px 0",color:"var(--muted)",fontSize:13}}>เพิ่มสินทรัพย์ก่อนเพื่อใช้งาน</div>;
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:18}}>
+      <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
+        {assets.map(x=><button key={x.id} onClick={()=>setAid(x.id)} style={{padding:"4px 12px",borderRadius:16,fontSize:12,fontWeight:700,cursor:"pointer",border:"1px solid",borderColor:aid===x.id?"var(--accent)":"var(--border)",background:aid===x.id?"var(--accent)":"transparent",color:aid===x.id?"#fff":"var(--muted)",fontFamily:"inherit"}}>{x.ticker}</button>)}
+      </div>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+        {/* Break-even */}
+        <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:16,padding:18}}>
+          <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>Break-even Analysis</div>
+          {be&&<div style={{display:"flex",flexDirection:"column",gap:10}}>
+            {[["ต้นทุนเฉลี่ย","$"+f2(a.avgCost),""],["ราคาปัจจุบัน","$"+f2(a.currentPrice),""],["Break-even","$"+f2(be.be),"warn"],["ต้องขึ้น/ลง",fPct(be.pct),be.pct>=0?"pos":"neg"]].map(([lb,vl,cl])=><div key={lb} style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:13}}>
+              <span style={{color:"var(--muted)"}}>{lb}</span>
+              <span style={{fontFamily:"var(--mono)",fontWeight:700,color:cl?("var(--"+cl+")"):"var(--text)"}}>{vl}</span>
+            </div>)}
+            <div style={{height:1,background:"var(--border)"}}/>
+            <div style={{fontSize:11,color:"var(--muted)",marginBottom:4}}>{a.currentPrice>=a.avgCost?"🎉 เกิน break-even แล้ว!":"ยังขาดทุน — ต้องขึ้นอีก "+fPct(be.pct)}</div>
+            <div style={{background:"var(--border)",borderRadius:6,height:8,overflow:"hidden"}}>
+              <div style={{width:be.bar+"%",height:"100%",background:a.currentPrice>=a.avgCost?"linear-gradient(90deg,var(--pos),#22d3ee)":"linear-gradient(90deg,#f87171,var(--warn))",borderRadius:6,transition:"width .6s"}}/>
+            </div>
+            <div style={{background:"rgba(59,130,246,.06)",borderRadius:8,padding:"8px 12px",fontSize:12,color:"var(--muted)"}}>
+              มูลค่า (THB): <strong style={{color:"var(--text)",fontFamily:"var(--mono)"}}>฿{f2(a.qty*a.currentPrice*usdThb,0)}</strong>
+            </div>
           </div>}
-        </div>}
+        </div>
+        {/* DCA Calc */}
+        <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:16,padding:18}}>
+          <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>DCA Calculator</div>
+          <div style={{display:"flex",flexDirection:"column",gap:9}}>
+            {[["ซื้อต่อรอบ (USD)",<input key="a" type="number" value={amt} onChange={e=>setAmt(e.target.value)} style={is}/>],
+              ["ความถี่",<select key="f" value={freq} onChange={e=>setFreq(e.target.value)} style={is}><option value="daily">ทุกวัน</option><option value="weekly">ทุกสัปดาห์</option><option value="monthly">ทุกเดือน</option></select>],
+              ["นานกี่เดือน",<input key="m" type="number" value={mo} onChange={e=>setMo(e.target.value)} style={is}/>],
+              ["คาด %/ปี",<input key="r" type="number" value={ret} onChange={e=>setRet(e.target.value)} style={is}/>]
+            ].map(([lb,inp])=><div key={lb}><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:4}}>{lb}</div>{inp}</div>)}
+            {dcaR&&<>
+              <div style={{height:1,background:"var(--border)"}}/>
+              {[["ลงทุนเพิ่ม","$"+f2(dcaR.invested),""],["ต้นทุนเฉลี่ยใหม่","$"+f2(dcaR.newAvg),"warn"],["มูลค่าคาดการณ์","$"+f2(dcaR.projected),"pos"],["ผลตอบแทนคาด",fPct(dcaR.projRet),dcaR.projRet>=0?"pos":"neg"]].map(([lb,vl,cl])=><div key={lb} style={{display:"flex",justifyContent:"space-between",fontSize:13}}>
+                <span style={{color:"var(--muted)"}}>{lb}</span>
+                <span style={{fontFamily:"var(--mono)",fontWeight:700,color:cl?"var(--"+cl+")":"var(--text)"}}>{vl}</span>
+              </div>)}
+              <div style={{background:"rgba(59,130,246,.06)",borderRadius:8,padding:"8px 12px",fontSize:12,color:"var(--muted)"}}>≈ ฿{f2(dcaR.projected*usdThb,0)} THB</div>
+            </>}
+          </div>
+        </div>
       </div>
-      <div className="modal-footer"><button className="btn-ghost" onClick={onClose}>ยกเลิก</button><button className="btn-primary" onClick={save} disabled={!ok} style={{opacity:ok?1:.5}}><Icon d={I.check} size={15}/> บันทึก</button></div>
+      {/* Cost vs Market */}
+      {cvmPts.length>=2&&<div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:16,padding:18}}>
+        <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:12}}>Cost vs Market Price — {a.ticker}</div>
+        <div style={{display:"flex",gap:14,marginBottom:10,flexWrap:"wrap",fontSize:11,color:"var(--muted)"}}>
+          <span>🟡 ต้นทุนเฉลี่ย</span><span>🔵 ซื้อต่ำกว่าเฉลี่ย (ดี)</span><span>🔴 ซื้อสูงกว่าเฉลี่ย</span><span>🟢 ราคาปัจจุบัน</span>
+        </div>
+        {(()=>{
+          const W=760,H=200,PL=55,PR=10,PT=10,PB=28,cW=W-PL-PR,cH=H-PT-PB;
+          const allP=cvmPts.flatMap(p=>[p.buy,p.avg]).concat([a.currentPrice]);
+          const mn=Math.min(...allP)*0.93,mx=Math.max(...allP)*1.07;
+          const minTs=new Date(cvmPts[0].date).getTime(),maxTs=Date.now();
+          const xP=d=>PL+((new Date(d).getTime()-minTs)/(maxTs-minTs||1))*cW;
+          const yP=v=>PT+(1-(v-mn)/(mx-mn||1))*cH;
+          const avgPath=cvmPts.map((p,i)=>(i===0?"M":"L")+xP(p.date).toFixed(1)+","+yP(p.avg).toFixed(1)).join(" ");
+          const cpY=yP(a.currentPrice).toFixed(1);
+          const range=mx-mn,step=range>50000?10000:range>10000?5000:range>1000?500:range>100?50:10;
+          const yTk=[];for(let v=Math.ceil(mn/step)*step;v<=mx;v+=step) yTk.push({v,y:yP(v)});
+          const mxQ=Math.max(...cvmPts.map(p=>p.qty));
+          return <svg viewBox={"0 0 "+W+" "+H} style={{width:"100%",height:"auto",display:"block"}}>
+            <defs><clipPath id="cvm"><rect x={PL} y={PT} width={cW} height={cH}/></clipPath></defs>
+            {yTk.map((t,i)=><g key={i}><line x1={PL} y1={t.y} x2={PL+cW} y2={t.y} stroke="#1e2d4a" strokeWidth="1"/><text x={PL-5} y={t.y+3} textAnchor="end" fill="var(--muted)" fontSize="8">{t.v>=1000?"$"+(t.v/1000).toFixed(0)+"k":"$"+t.v}</text></g>)}
+            <line x1={PL} y1={cpY} x2={PL+cW} y2={cpY} stroke="var(--pos)" strokeWidth="1.5" strokeDasharray="5,3" clipPath="url(#cvm)"/>
+            <text x={PL+cW-3} y={parseFloat(cpY)-4} textAnchor="end" fill="var(--pos)" fontSize="8" fontWeight="700">${f2(a.currentPrice)}</text>
+            <path d={avgPath} fill="none" stroke="var(--warn)" strokeWidth="2" clipPath="url(#cvm)"/>
+            {cvmPts.map((p,i)=>{ const r=3+(p.qty/mxQ)*5; return <circle key={i} cx={xP(p.date)} cy={yP(p.buy)} r={r} fill={p.buy>p.avg?"rgba(248,113,113,.75)":"rgba(96,165,250,.75)"} stroke={p.buy>p.avg?"#f87171":"#60a5fa"} strokeWidth="1.5" clipPath="url(#cvm)"/>; })}
+          </svg>;
+        })()}
+      </div>}
     </div>
-  </div>;
+  );
 };
 
-// ── Backup Modal ──────────────────────────────────────────────────────────────
-const BackupModal = ({assets, onClose, onRestore}) => {
-  const [st,setSt]=useState("idle"); const [msg,setMsg]=useState("");
-  const exp=()=>{ const j=JSON.stringify({version:1,exportedAt:new Date().toISOString(),assets},null,2); const uri="data:application/json;charset=utf-8,"+encodeURIComponent(j); const a=document.createElement("a"); a.href=uri; a.download="portfolio_"+new Date().toISOString().slice(0,10)+".json"; document.body.appendChild(a); a.click(); document.body.removeChild(a); setSt("done"); setMsg("ดาวน์โหลดสำเร็จ"); };
-  const imp=e=>{ const f=e.target.files[0]; if(!f) return; setSt("loading"); const r=new FileReader(); r.onload=ev=>{ try{ const d=JSON.parse(ev.target.result); if(d.assets){onRestore(d.assets);setSt("done");setMsg("นำเข้า "+d.assets.length+" รายการ");}else{setSt("error");setMsg("ไฟล์ไม่ถูกต้อง");} }catch{setSt("error");setMsg("อ่านไฟล์ไม่ได้");} }; r.readAsText(f); };
-  return <div className="modal-overlay" onClick={onClose}><div className="modal" style={{maxWidth:420}} onClick={e=>e.stopPropagation()}>
-    <div className="modal-header"><span>🗄️ Backup</span><button className="icon-btn" onClick={onClose}><Icon d={I.x}/></button></div>
-    <div className="modal-body" style={{display:"flex",flexDirection:"column",gap:16}}>
-      <div><div style={{fontWeight:700,marginBottom:6}}>💾 Export</div><p style={{fontSize:13,color:"var(--muted)",marginBottom:10}}>ดาวน์โหลดเป็น JSON แล้วเก็บใน Google Drive</p><button className="btn-primary" onClick={exp}><Icon d={I.down} size={15}/> ดาวน์โหลด JSON</button></div>
-      <div style={{height:1,background:"var(--border)"}}/>
-      <div><div style={{fontWeight:700,marginBottom:6}}>📂 Import</div><p style={{fontSize:13,color:"var(--muted)",marginBottom:10}}>เลือกไฟล์ JSON ที่เคย Export ไว้</p><label style={{display:"inline-flex",alignItems:"center",gap:6,background:"transparent",color:"var(--text)",border:"1px solid var(--accent)",padding:"9px 16px",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer"}}><Icon d={I.up} size={15}/> เลือกไฟล์<input type="file" accept=".json" onChange={imp} style={{display:"none"}}/></label></div>
-      {st!=="idle"&&<div style={{padding:"10px 14px",borderRadius:8,fontSize:13,background:st==="done"?"rgba(74,222,128,.1)":st==="error"?"rgba(248,113,113,.1)":"rgba(251,191,36,.1)",color:st==="done"?"var(--positive)":st==="error"?"var(--negative)":"var(--warning)"}}>{st==="loading"?"⏳ กำลังอ่าน...":msg}</div>}
-    </div>
-  </div></div>;
-};
-
-// ── Sheets Setup Modal ────────────────────────────────────────────────────────
-const SheetsModal = ({initUrl, initToken, onSave, onClose}) => {
-  const [url,setUrl]=useState(initUrl||""); const [tok,setTok]=useState(initToken||"");
-  const [st,setSt]=useState("idle"); const [msg,setMsg]=useState("");
-  const IS={background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"10px 12px",borderRadius:8,fontSize:13,fontFamily:"inherit",outline:"none",width:"100%",marginTop:6};
-  const test=async()=>{ if(!url||!tok){setSt("error");setMsg("กรุณากรอกทั้งสองช่อง");return;} setSt("loading");setMsg("กำลังทดสอบ...");
-    try{ const r=await fetch(url.trim()+"?action=ping&token="+encodeURIComponent(tok.trim()),{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"ping",token:tok.trim()})}); const d=await r.json(); if(d.ok){setSt("ok");setMsg("✅ เชื่อมต่อสำเร็จ!");}else{setSt("error");setMsg("❌ "+(d.error||"Token ไม่ถูกต้อง"));} }catch(e){setSt("error");setMsg("❌ "+e.message);} };
-  return <div className="modal-overlay" onClick={onClose}><div className="modal" style={{maxWidth:460}} onClick={e=>e.stopPropagation()}>
-    <div className="modal-header"><span>🔗 เชื่อมต่อ Google Sheets</span><button className="icon-btn" onClick={onClose}><Icon d={I.x}/></button></div>
-    <div className="modal-body" style={{display:"flex",flexDirection:"column",gap:14}}>
-      <div style={{background:"rgba(59,130,246,.08)",border:"1px solid rgba(59,130,246,.2)",borderRadius:10,padding:"12px 14px",fontSize:12,color:"var(--muted)",lineHeight:1.8}}>
-        <strong style={{color:"var(--accent2)"}}>ขั้นตอน:</strong><br/>
-        1. เปิด <a href="https://script.google.com" target="_blank" style={{color:"var(--accent2)"}}>script.google.com</a> → New project<br/>
-        2. วางโค้ดจากไฟล์ GoogleAppsScript.gs<br/>
-        3. แก้ SECRET_TOKEN → Deploy → Web app → Anyone<br/>
-        4. Copy URL มาวางด้านล่าง
+// ── Goals Tab ──────────────────────────────────────────────────────────────────
+const GoalsTab = ({assets,goals,saveGoal,deleteGoal,usdThb}) => {
+  const [showForm,setShowForm]=useState(false),[editG,setEditG]=useState(null);
+  const [form,setForm]=useState({name:"",targetUSD:"",deadline:"",note:""});
+  const tv=assets.reduce((s,a)=>s+a.qty*a.currentPrice,0);
+  const sf=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const save=()=>{ if(!form.name||!form.targetUSD) return; saveGoal({...form,id:editG&&editG.id||null}); setForm({name:"",targetUSD:"",deadline:"",note:""}); setShowForm(false);setEditG(null); };
+  const is={background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"9px 12px",borderRadius:8,fontSize:13,fontFamily:"inherit",outline:"none",width:"100%"};
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:18}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+        <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:14,padding:18,position:"relative",overflow:"hidden"}}>
+          <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,var(--accent),#8b5cf6)"}}/>
+          <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:6}}>มูลค่าปัจจุบัน</div>
+          <div style={{fontFamily:"var(--mono)",fontSize:20,fontWeight:800}}>{fUSD(tv)}</div>
+          <div style={{fontSize:12,color:"var(--muted)",marginTop:4}}>≈ ฿{f2(tv*usdThb,0)}</div>
+        </div>
+        <div onClick={()=>{setEditG(null);setForm({name:"",targetUSD:"",deadline:"",note:""});setShowForm(true);}} style={{background:"var(--card)",border:"1px dashed var(--border)",borderRadius:14,padding:18,cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,transition:"border-color .2s"}}>
+          <span style={{fontSize:28}}>+</span>
+          <span style={{fontSize:12,color:"var(--muted)",fontWeight:600}}>เพิ่มเป้าหมาย</span>
+        </div>
       </div>
-      <div><label style={{fontSize:11,fontWeight:700,color:"var(--muted)"}}>Apps Script URL</label><input value={url} onChange={e=>setUrl(e.target.value)} placeholder="https://script.google.com/macros/s/.../exec" style={IS}/></div>
-      <div><label style={{fontSize:11,fontWeight:700,color:"var(--muted)"}}>Secret Token</label><input type="password" value={tok} onChange={e=>setTok(e.target.value)} placeholder="YOUR_SECRET_TOKEN_HERE" style={IS}/></div>
-      {st!=="idle"&&<div style={{padding:"10px 14px",borderRadius:8,fontSize:13,background:st==="ok"?"rgba(74,222,128,.1)":st==="error"?"rgba(248,113,113,.1)":"rgba(251,191,36,.1)",color:st==="ok"?"var(--positive)":st==="error"?"var(--negative)":"var(--warning)"}}>{msg}</div>}
+      {showForm&&<div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:14,padding:20}}>
+        <div style={{fontSize:12,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",color:"var(--muted)",marginBottom:14}}>{editG?"แก้ไขเป้าหมาย":"เพิ่มเป้าหมายใหม่"}</div>
+        <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:12}}>
+          <div style={{gridColumn:"1/-1"}}><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:4}}>ชื่อเป้าหมาย</div><input value={form.name} onChange={e=>sf("name",e.target.value)} placeholder="เช่น ซื้อบ้าน, 1 BTC" style={is}/></div>
+          <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:4}}>มูลค่าเป้าหมาย (USD)</div><input type="number" value={form.targetUSD} onChange={e=>sf("targetUSD",e.target.value)} placeholder="100000" style={is}/></div>
+          <div><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:4}}>วันที่เป้าหมาย</div><input type="date" value={form.deadline} onChange={e=>sf("deadline",e.target.value)} style={is}/></div>
+          <div style={{gridColumn:"1/-1"}}><div style={{fontSize:11,fontWeight:700,color:"var(--muted)",marginBottom:4}}>หมายเหตุ</div><input value={form.note} onChange={e=>sf("note",e.target.value)} style={is}/></div>
+        </div>
+        <div style={{display:"flex",gap:10,justifyContent:"flex-end"}}>
+          <button onClick={()=>{setShowForm(false);setEditG(null);}} style={{background:"transparent",border:"1px solid var(--border)",color:"var(--muted)",padding:"7px 16px",borderRadius:9,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>ยกเลิก</button>
+          <button onClick={save} disabled={!form.name||!form.targetUSD} style={{background:"var(--accent)",color:"#fff",border:"none",padding:"7px 18px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",opacity:form.name&&form.targetUSD?1:.5,display:"flex",alignItems:"center",gap:6}}><Ic d={I.check} size={14}/> บันทึก</button>
+        </div>
+      </div>}
+      {goals.length===0&&!showForm&&<div style={{textAlign:"center",padding:"48px 0",color:"var(--muted)",fontSize:13}}>ยังไม่มีเป้าหมาย — กด + เพื่อเริ่มต้น</div>}
+      {goals.map(g=>{
+        const tgt=parseFloat(g.targetUSD)||1,prog=Math.min(100,(tv/tgt)*100),done=tv>=tgt;
+        const daysLeft=g.deadline?Math.ceil((new Date(g.deadline)-new Date())/86400000):null;
+        const lots=assets.flatMap(a=>a.dcaLots||[]).filter(l=>l.date&&l.qty&&l.price);
+        const mInv=lots.length>1?(()=>{ const s=[...lots].sort((a,b)=>a.date.localeCompare(b.date)); const mo=(new Date(s[s.length-1].date)-new Date(s[0].date))/(30*86400000)||1; return lots.reduce((sum,l)=>sum+parseFloat(l.qty)*parseFloat(l.price),0)/mo; })():0;
+        const moToGoal=mInv>0&&!done?Math.ceil((tgt-tv)/mInv):null;
+        return <div key={g.id} style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:14,padding:18}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:14}}>
+            <div>
+              <div style={{fontWeight:800,fontSize:15,display:"flex",alignItems:"center",gap:8}}>{done?"🎉":"🎯"} {g.name}
+                {done&&<span style={{background:"rgba(74,222,128,.15)",color:"var(--pos)",fontSize:10,fontWeight:700,padding:"2px 8px",borderRadius:10}}>บรรลุแล้ว!</span>}
+              </div>
+              {g.note&&<div style={{fontSize:12,color:"var(--muted)",marginTop:2}}>{g.note}</div>}
+            </div>
+            <div style={{display:"flex",gap:4}}>
+              <button onClick={()=>{setEditG(g);setForm({...g});setShowForm(true);}} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:5,display:"flex",borderRadius:6}}><Ic d={I.edit} size={14}/></button>
+              <button onClick={()=>deleteGoal(g.id)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:5,display:"flex",borderRadius:6}}><Ic d={I.trash} size={14}/></button>
+            </div>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:12,marginBottom:7}}>
+            <span style={{fontFamily:"var(--mono)",fontWeight:700}}>{fUSD(tv)} <span style={{color:"var(--muted)",fontWeight:400}}>/ {fUSD(tgt)}</span></span>
+            <span style={{fontFamily:"var(--mono)",fontWeight:800,color:done?"var(--pos)":"var(--accent)"}}>{prog.toFixed(1)}%</span>
+          </div>
+          <div style={{background:"var(--border)",borderRadius:8,height:11,overflow:"hidden",marginBottom:12,position:"relative"}}>
+            <div style={{width:prog+"%",height:"100%",borderRadius:8,transition:"width .8s",background:done?"linear-gradient(90deg,var(--pos),#22d3ee)":prog>75?"linear-gradient(90deg,var(--accent),#8b5cf6)":"linear-gradient(90deg,#1e3a5f,var(--accent))"}}/>
+            {prog>12&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",paddingLeft:9,fontSize:9,color:"#fff",fontWeight:700}}>{prog.toFixed(0)}%</div>}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8}}>
+            {[["ยังขาดอีก",done?"✓ บรรลุ!":fUSD(tgt-tv),done?"pos":"warn"],g.deadline&&["วันที่เป้าหมาย",daysLeft<=0?"หมดเวลา":daysLeft+" วัน",daysLeft<30&&daysLeft>0?"neg":"text"],moToGoal&&["ถึงเป้าใน (DCA)","~"+moToGoal+" เดือน","accent2"],["เป้า (THB)","฿"+f2(tgt*usdThb,0),"muted"]].filter(Boolean).map(([lb,vl,cl])=>(
+              <div key={lb} style={{background:"var(--surface)",borderRadius:9,padding:"9px 12px"}}>
+                <div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>{lb}</div>
+                <div style={{fontFamily:"var(--mono)",fontWeight:700,fontSize:12,color:"var(--"+cl+")"}}>{vl}</div>
+              </div>
+            ))}
+          </div>
+        </div>;
+      })}
     </div>
-    <div className="modal-footer"><button className="btn-ghost" onClick={test} disabled={st==="loading"}>🔌 ทดสอบ</button><button className="btn-primary" onClick={()=>onSave(url.trim(),tok.trim())} disabled={!url||!tok}><Icon d={I.check} size={15}/> บันทึก</button></div>
-  </div></div>;
+  );
 };
 
-// ── Confirm Delete Modal ──────────────────────────────────────────────────────
-const ConfirmModal = ({name, onConfirm, onClose}) => (
-  <div className="modal-overlay" onClick={onClose}><div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:20,width:"100%",maxWidth:320,padding:"28px 24px",display:"flex",flexDirection:"column",alignItems:"center",gap:12,textAlign:"center"}} onClick={e=>e.stopPropagation()}>
-    <div style={{fontSize:36}}>🗑️</div>
-    <div style={{fontSize:17,fontWeight:800}}>ยืนยันการลบ</div>
-    <div style={{fontSize:13,color:"var(--muted)",lineHeight:1.6}}>ต้องการลบ <strong style={{color:"var(--text)"}}>{name}</strong>?</div>
-    <div style={{display:"flex",gap:10,marginTop:4}}><button className="btn-ghost" onClick={onClose}>ยกเลิก</button><button onClick={onConfirm} style={{display:"inline-flex",alignItems:"center",gap:6,background:"#ef4444",color:"#fff",border:"none",padding:"9px 20px",borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}><Icon d={I.trash} size={15}/> ลบ</button></div>
-  </div></div>
-);
-
-// ── Price Log Modal ───────────────────────────────────────────────────────────
-const LogModal = ({log, onClose}) => (
-  <div className="modal-overlay" onClick={onClose}><div className="modal" onClick={e=>e.stopPropagation()}>
-    <div className="modal-header"><span>📋 ประวัติอัพเดทราคา</span><button className="icon-btn" onClick={onClose}><Icon d={I.x}/></button></div>
-    <div className="modal-body" style={{maxHeight:380,overflowY:"auto"}}>
-      {log.length===0?<div style={{textAlign:"center",padding:"32px 0",color:"var(--muted)"}}>ยังไม่มีประวัติ</div>
-      :log.slice().reverse().map((e,i)=><div key={i} style={{borderBottom:"1px solid var(--border)",padding:"10px 0",fontSize:13}}>
-        <div style={{fontSize:11,color:"var(--muted)",marginBottom:4}}>{new Date(e.time).toLocaleString("th-TH")}</div>
-        <div style={{display:"flex",flexWrap:"wrap",gap:6}}>{Object.entries(e.prices).map(([t,p])=><span key={t} style={{background:"var(--surface)",padding:"2px 8px",borderRadius:6,fontFamily:"var(--mono)",fontSize:12}}>{t}: {fmt(p)}</span>)}</div>
-      </div>)}
-    </div>
-  </div></div>
-);
-
-// ── Main App ──────────────────────────────────────────────────────────────────
+// ── Main App ───────────────────────────────────────────────────────────────────
 function App() {
-  const SK = "portfolioTH_v4";
+  const SK="portfolioTH_v4";
+  const load=()=>{ try{const s=localStorage.getItem(SK);return s?JSON.parse(s).assets:SAMPLE;}catch{return SAMPLE;} };
 
-  // ── State (all before useEffect) ──────────────────────────────────────────
-  const [assets,       setAssets]       = useState(()=>ls.get(SK+".assets", SAMPLE));
-  const [tab,          setTab]          = useState("dashboard");
-  const [darkMode,     setDarkMode]     = useState(()=>localStorage.getItem("theme")==="light"?false:true);
-  const [usdThb,       setUsdThb]       = useState(()=>parseFloat(localStorage.getItem("usdThb"))||35.5);
-  const [goals,        setGoals]        = useState(()=>ls.get("goals", []));
-  const [priceStatus,  setPriceStatus]  = useState("idle");
-  const [priceError,   setPriceError]   = useState("");
-  const [lastUpdated,  setLastUpdated]  = useState(()=>localStorage.getItem("lastUpdated")||null);
-  const [priceLog,     setPriceLog]     = useState(()=>ls.get("priceLog", []));
-  const [autoMin,      setAutoMin]      = useState(0);
-  const [filterType,   setFilterType]   = useState("ทั้งหมด");
-  const [sortKey,      setSortKey]      = useState("value");
-  const [saved,        setSaved]        = useState(false);
-  const [showAdd,      setShowAdd]      = useState(false);
-  const [editAsset,    setEditAsset]    = useState(null);
-  const [showBackup,   setShowBackup]   = useState(false);
-  const [showLog,      setShowLog]      = useState(false);
-  const [confirmDel,   setConfirmDel]   = useState(null);
-  const [sheetUrl,     setSheetUrl]     = useState(()=>localStorage.getItem("gsheet_url")||"");
-  const [sheetToken,   setSheetToken]   = useState(()=>localStorage.getItem("gsheet_token")||"");
-  const [syncStatus,   setSyncStatus]   = useState("idle");
-  const [syncMsg,      setSyncMsg]      = useState("");
-  const [showSheets,   setShowSheets]   = useState(false);
-  const [activeAsset,  setActiveAsset]  = useState(null);
+  // ALL STATE FIRST
+  const [assets,     setAssets]     = useState(load);
+  const [tab,        setTab]        = useState("dashboard");
+  const [showModal,  setShowModal]  = useState(false);
+  const [editAsset,  setEditAsset]  = useState(null);
+  const [showBackup, setShowBackup] = useState(false);
+  const [showLog,    setShowLog]    = useState(false);
+  const [showSheets, setShowSheets] = useState(false);
+  const [filterType, setFilterType] = useState("ทั้งหมด");
+  const [sortKey,    setSortKey]    = useState("value");
+  const [saved,      setSaved]      = useState(false);
+  const [pxStatus,   setPxStatus]   = useState("idle");
+  const [pxError,    setPxError]    = useState("");
+  const [pxLog,      setPxLog]      = useState(()=>{ try{return JSON.parse(localStorage.getItem(SK)||"{}").priceLog||[];}catch{return [];} });
+  const [lastUpd,    setLastUpd]    = useState(()=>{ try{return JSON.parse(localStorage.getItem(SK)||"{}").lastUpdated||null;}catch{return null;} });
+  const [autoMin,    setAutoMin]    = useState(0);
+  const [delTarget,  setDelTarget]  = useState(null);
+  const [darkMode,   setDarkMode]   = useState(()=>{ try{return localStorage.getItem("theme")!=="light";}catch{return true;} });
+  const [usdThb,     setUsdThb]     = useState(()=>{ try{return parseFloat(localStorage.getItem("usdThb"))||35.5;}catch{return 35.5;} });
+  const [goals,      setGoals]      = useState(()=>{ try{return JSON.parse(localStorage.getItem("dca_goals")||"[]");}catch{return [];} });
+  const [sheetUrl,   setSheetUrl]   = useState(()=>localStorage.getItem("gsheet_url")||"");
+  const [sheetTok,   setSheetTok]   = useState(()=>localStorage.getItem("gsheet_token")||"");
+  const [syncSt,     setSyncSt]     = useState("idle");
+  const [syncMsg,    setSyncMsg]    = useState("");
 
-  // ── Effects ───────────────────────────────────────────────────────────────
+  // EFFECTS
   useEffect(()=>{ document.documentElement.setAttribute("data-theme",darkMode?"dark":"light"); localStorage.setItem("theme",darkMode?"dark":"light"); },[darkMode]);
-  useEffect(()=>{ ls.set(SK+".assets",assets); setSaved(true); setTimeout(()=>setSaved(false),1500); },[assets]);
-  useEffect(()=>{ ls.set("goals",goals); },[goals]);
-  useEffect(()=>{ if(assets.length>0&&!activeAsset) setActiveAsset(assets[0].id); },[assets]);
+  useEffect(()=>{ try{localStorage.setItem(SK,JSON.stringify({assets,lastUpdated:lastUpd,priceLog:pxLog.slice(-20)}));setSaved(true);setTimeout(()=>setSaved(false),1500);}catch{} },[assets]);
 
-  // ── Price update ──────────────────────────────────────────────────────────
-  const updatePrices = useCallback(async()=>{
+  // AUTO REFRESH
+  const timerRef=useRef(null);
+  useEffect(()=>{
+    clearInterval(timerRef.current);
+    if(autoMin>0){ timerRef.current=setInterval(()=>{ if(navigator.onLine) doUpdatePrices(); },autoMin*60000); }
+    return ()=>clearInterval(timerRef.current);
+  },[autoMin,assets]);
+
+  // PRICE UPDATE
+  const doUpdatePrices=useCallback(async()=>{
     if(!assets.length) return;
-    setPriceStatus("loading"); setPriceError("");
-    fetch("https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=thb").then(r=>r.json()).then(d=>{ if(d&&d.tether&&d.tether.thb){const v=parseFloat(d.tether.thb);setUsdThb(v);localStorage.setItem("usdThb",String(v));} }).catch(()=>{});
-    try {
-      const prices = await fetchPrices(assets);
-      const now = new Date().toISOString();
-      if (prices._usdthb) { setUsdThb(prices._usdthb); localStorage.setItem("usdThb",String(prices._usdthb)); }
+    setPxStatus("loading"); setPxError("");
+    fetch("https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=thb").then(r=>r.json()).then(d=>{ if(d&&d.tether&&d.tether.thb){const r=parseFloat(d.tether.thb);setUsdThb(r);localStorage.setItem("usdThb",String(r));} }).catch(()=>{});
+    try{
+      const prices=await fetchPrices(assets);
+      const now=new Date().toISOString();
       setAssets(prev=>prev.map(a=>{ const p=prices[a.ticker.toUpperCase()]; return p?{...a,currentPrice:p}:a; }));
-      setLastUpdated(now); localStorage.setItem("lastUpdated",now);
-      setPriceLog(prev=>[...prev.slice(-19),{time:now,prices}]);
-      ls.set("priceLog",[...priceLog.slice(-19),{time:now,prices}]);
-      setPriceStatus("done"); setTimeout(()=>setPriceStatus("idle"),3000);
-    } catch(e){ setPriceError(e.message); setPriceStatus("error"); setTimeout(()=>setPriceStatus("idle"),5000); }
+      setLastUpd(now);
+      setPxLog(prev=>[...prev.slice(-19),{time:now,prices}]);
+      setPxStatus("done"); setTimeout(()=>setPxStatus("idle"),3000);
+    }catch(e){ setPxError(e.message); setPxStatus("error"); setTimeout(()=>setPxStatus("idle"),5000); }
   },[assets]);
 
-  // ── Asset CRUD ────────────────────────────────────────────────────────────
-  const saveAsset = d => {
-    const now = new Date().toISOString();
-    if (editAsset) setAssets(a=>a.map(x=>x.id===editAsset.id?{...d,id:editAsset.id,syncedAt:now}:x));
-    else setAssets(a=>[...a,{...d,id:Date.now(),syncedAt:now}]);
-    setShowAdd(false); setEditAsset(null);
+  // GOOGLE SHEETS SYNC
+  const sheetApi=async(action,body={})=>{
+    if(!sheetUrl||!sheetTok) throw new Error("ยังไม่ได้ตั้งค่า Google Sheets");
+    const r=await fetch(sheetUrl+"?action="+action+"&token="+encodeURIComponent(sheetTok),{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action,token:sheetTok,...body})});
+    if(!r.ok) throw new Error("HTTP "+r.status);
+    const d=await r.json(); if(!d.ok) throw new Error(d.error||"Error"); return d;
   };
-
-  // ── Goals CRUD ────────────────────────────────────────────────────────────
-  const saveGoal = g => { const updated=g.id?goals.map(x=>x.id===g.id?g:x):[...goals,{...g,id:Date.now()}]; setGoals(updated); };
-  const deleteGoal = id => setGoals(g=>g.filter(x=>x.id!==id));
-
-  // ── CSV Export ────────────────────────────────────────────────────────────
-  const exportCSV = () => {
-    const rows = [["Date","Ticker","Name","Type","Qty","AvgCost","CurrentPrice","Currency","CostBasis","Value","PnL","PnL%","Sector","Note"]];
-    withPnl.forEach(a=>rows.push([a.dateAdded||"",a.ticker,a.name,a.type,a.qty,a.avgCost,a.currentPrice,a.currency,a.cost.toFixed(2),a.value.toFixed(2),a.pnlAmt.toFixed(2),a.pnlPct.toFixed(2),a.sector||"",a.note||""]));
-    withPnl.forEach(a=>(a.dcaLots||[]).forEach(l=>rows.push([l.date,a.ticker,"[DCA lot]","","",l.price,l.qty,"","","","","","",""])));
-    const csv = rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
-    const uri = "data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
-    const a=document.createElement("a"); a.href=uri; a.download="portfolio_"+new Date().toISOString().slice(0,10)+".csv"; document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  };
-
-  // ── Google Sheets Sync ────────────────────────────────────────────────────
-  const sheetCall = async (action, body={}) => {
-    if(!sheetUrl||!sheetToken) throw new Error("ยังไม่ได้ตั้งค่า Google Sheets");
-    return sheetsApi(sheetUrl, sheetToken, action, body);
-  };
-  const doSync = async (action) => {
-    setSyncStatus("loading"); setSyncMsg(action==="save"?"กำลัง Save...":action==="load"?"กำลัง Load...":"กำลัง Sync...");
-    try {
-      const now = new Date().toISOString();
-      const tagged = assets.map(a=>({...a,syncedAt:a.syncedAt||now}));
-      const res = await sheetCall(action, action!=="load"?{assets:tagged}:{});
-      if (action!=="save"&&res.assets) setAssets(res.assets);
-      setSyncStatus("done"); const label=action==="save"?"Save":action==="load"?"Load":"Sync"; setSyncMsg("✅ "+label+" สำเร็จ • "+new Date().toLocaleTimeString("th-TH"));
+  const doSync=async(action)=>{
+    setSyncSt("loading"); setSyncMsg("กำลัง "+action+"...");
+    try{
+      const now=new Date().toISOString();
+      let result;
+      if(action==="save")       result=await sheetApi("save",{assets:assets.map(a=>({...a,syncedAt:now}))});
+      else if(action==="load")  result=await sheetApi("load");
+      else                      result=await sheetApi("sync",{assets:assets.map(a=>({...a,syncedAt:a.syncedAt||now}))});
+      if((action==="load"||action==="sync")&&result.assets) setAssets(result.assets);
       localStorage.setItem("gsheet_lastSync",now);
-      setTimeout(()=>setSyncStatus("idle"),4000);
-    } catch(e){ setSyncStatus("error"); setSyncMsg("❌ "+e.message); setTimeout(()=>setSyncStatus("idle"),6000); }
+      setSyncSt("done"); setSyncMsg("✅ "+(action==="save"?"Save":action==="load"?"Load":"Sync")+" สำเร็จ • "+new Date().toLocaleTimeString("th-TH"));
+      setTimeout(()=>setSyncSt("idle"),4000);
+    }catch(e){ setSyncSt("error"); setSyncMsg("❌ "+e.message); setTimeout(()=>setSyncSt("idle"),6000); }
   };
 
-  // ── Derived data ──────────────────────────────────────────────────────────
-  const withPnl = useMemo(()=>assets.map(a=>({...a,...calcPnl(a)})),[assets]);
-  const filtered = useMemo(()=>{
-    let r=filterType==="ทั้งหมด"?withPnl:withPnl.filter(a=>a.type===filterType);
-    return [...r].sort((a,b)=>sortKey==="value"?b.value-a.value:sortKey==="pnlPct"?b.pnlPct-a.pnlPct:sortKey==="pnlAmt"?b.pnlAmt-a.pnlAmt:a.name.localeCompare(b.name));
-  },[withPnl,filterType,sortKey]);
-  const sum = useMemo(()=>{
-    const tc=withPnl.reduce((s,a)=>s+a.cost,0),tv=withPnl.reduce((s,a)=>s+a.value,0),tp=tv-tc;
-    return {tc,tv,tp,pct:tc>0?(tp/tc)*100:0,wins:withPnl.filter(a=>a.pnlAmt>0).length,loses:withPnl.filter(a=>a.pnlAmt<0).length};
-  },[withPnl]);
-  const alloc = useMemo(()=>{ const g={}; withPnl.forEach(a=>{g[a.type]=(g[a.type]||0)+a.value;}); return Object.entries(g).map(([label,value])=>({label,value})); },[withPnl]);
-  const topG = useMemo(()=>[...withPnl].sort((a,b)=>b.pnlPct-a.pnlPct)[0],[withPnl]);
-  const topL = useMemo(()=>[...withPnl].sort((a,b)=>a.pnlPct-b.pnlPct)[0],[withPnl]);
-  const selAsset = assets.find(a=>a.id===activeAsset)||assets[0];
+  // ASSET CRUD
+  const saveAsset=(data)=>{ if(editAsset) setAssets(a=>a.map(x=>x.id===editAsset.id?{...data,id:editAsset.id}:x)); else setAssets(a=>[...a,{...data,id:Date.now()}]); setShowModal(false);setEditAsset(null); };
+  const deleteAsset=(id)=>{ const a=assets.find(x=>x.id===id); setDelTarget({id,name:(a&&a.name)||(a&&a.ticker)||"รายการนี้"}); };
+  const confirmDel=()=>{ if(delTarget) setAssets(a=>a.filter(x=>x.id!==delTarget.id)); setDelTarget(null); };
+  const saveGoal=(g)=>{ const u=g.id?goals.map(x=>x.id===g.id?g:x):[...goals,{...g,id:Date.now()}]; setGoals(u);localStorage.setItem("dca_goals",JSON.stringify(u)); };
+  const deleteGoal=(id)=>{ const g=goals.filter(x=>x.id!==id); setGoals(g);localStorage.setItem("dca_goals",JSON.stringify(g)); };
+  const exportCSV=()=>{
+    const header=["Date","Ticker","Name","Type","Qty","AvgCost","CurrentPrice","Currency","Cost","Value","PnL","PnL%","Sector","Note"];
+    const rows=withPnl.map(a=>[a.dateAdded||"",a.ticker,a.name,a.type,a.qty,a.avgCost,a.currentPrice,a.currency,a.cost.toFixed(2),a.value.toFixed(2),a.pnlAmt.toFixed(2),a.pnlPct.toFixed(2),a.sector||"",a.note||""]);
+    const lotH=[["","--- DCA LOTS ---"],["Ticker","Date","Price","Qty","Cost"]];
+    const lotR=withPnl.flatMap(a=>(a.dcaLots||[]).map(l=>[a.ticker,l.date,l.price,l.qty,(parseFloat(l.price)*parseFloat(l.qty)).toFixed(2)]));
+    const csv=[header,...rows,[""],...lotH,...lotR].map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(",")).join("\n");
+    const uri="data:text/csv;charset=utf-8,"+encodeURIComponent(csv);
+    const el=document.createElement("a");el.href=uri;el.download="portfolio_"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(el);el.click();document.body.removeChild(el);
+  };
 
-  // ── Render ────────────────────────────────────────────────────────────────
-  return <>
-  <style>{`
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Noto Sans Thai',sans-serif;color:var(--text);background:var(--bg);transition:background .2s,color .2s}
-    .app{min-height:100vh;display:flex;flex-direction:column}
-    .header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:58px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:8px}
-    .logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;white-space:nowrap}
-    .logo-dot{width:26px;height:26px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-    .h-actions{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow-x:auto}
-    .saved{font-size:11px;color:var(--positive);opacity:0;transition:opacity .3s;display:flex;align-items:center;gap:3px;white-space:nowrap}
-    .saved.show{opacity:1}
-    .fx{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:var(--muted);background:var(--surface);border:1px solid var(--border);padding:4px 9px;border-radius:14px;cursor:pointer;white-space:nowrap}
-    .fx:hover{color:var(--text);border-color:var(--accent)}
-    .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);overflow-x:auto;-webkit-overflow-scrolling:touch}
-    .tab{padding:13px 16px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border:none;border-bottom:2px solid transparent;background:none;display:flex;align-items:center;gap:5px;white-space:nowrap;font-family:inherit;flex-shrink:0}
-    .tab.on{color:var(--accent2);border-bottom-color:var(--accent)}
-    .content{flex:1;padding:20px;max-width:1400px;margin:0 auto;width:100%}
-    .panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px;flex-wrap:wrap}
-    .pill{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px}
-    .pill.ok{background:rgba(74,222,128,.12);color:var(--positive)}
-    .pill.warn{background:rgba(251,191,36,.12);color:var(--warning)}
-    .pill.err{background:rgba(248,113,113,.12);color:var(--negative)}
-    .pill.dim{background:rgba(90,122,154,.12);color:var(--muted)}
-    .spin-dot{width:7px;height:7px;border-radius:50%;background:var(--warning);animation:pulse 1s infinite;display:inline-block}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-    .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:16px}
-    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden}
-    .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#8b5cf6)}
-    .stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:7px}
-    .stat-val{font-family:var(--mono);font-size:20px;font-weight:700;line-height:1}
-    .stat-sub{font-size:11px;color:var(--muted);margin-top:5px}
-    .positive{color:var(--positive)}.negative{color:var(--negative)}.neutral{color:var(--muted)}
-    .hl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
-    .hl-card{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:14px;display:flex;align-items:center;gap:12px}
-    .dash-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px}
-    .card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:7px}
-    .toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
-    .chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);color:var(--muted);background:transparent;font-family:inherit;transition:all .15s}
-    .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
-    .table-wrap{overflow-x:auto}
-    table{width:100%;border-collapse:collapse;font-size:13px}
-    th{text-align:left;padding:9px 12px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);white-space:nowrap}
-    td{padding:11px 12px;border-bottom:1px solid rgba(30,45,74,.5);vertical-align:middle}
-    tr:hover td{background:rgba(59,130,246,.04)}
-    .mono{font-family:var(--mono);font-size:12px}
-    .dca-badge{display:inline-flex;align-items:center;background:rgba(251,191,36,.12);color:var(--warning);font-size:10px;font-weight:700;padding:1px 6px;border-radius:8px;margin-left:5px}
-    .pm{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px}
-    .btn-primary{display:inline-flex;align-items:center;gap:5px;background:var(--accent);color:#fff;border:none;padding:8px 14px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
-    .btn-primary:hover{filter:brightness(1.1)}
-    .btn-primary:disabled{opacity:.5;cursor:not-allowed}
-    .btn-ghost{display:inline-flex;align-items:center;gap:5px;background:transparent;color:var(--muted);border:1px solid var(--border);padding:8px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s}
-    .btn-ghost:hover{color:var(--text);border-color:var(--accent)}
-    .btn-ghost:disabled{opacity:.5;cursor:not-allowed}
-    .btn-sm{display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap}
-    .btn-sm:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
-    .btn-sm:disabled{opacity:.5;cursor:not-allowed}
-    .btn-sm-blue{display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#1a73e8,#4285f4);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
-    .btn-sm-blue:hover:not(:disabled){filter:brightness(1.1)}
-    .btn-sm-blue:disabled{opacity:.5;cursor:not-allowed}
-    .icon-btn{background:none;border:none;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:5px;border-radius:6px;transition:all .15s}
-    .icon-btn:hover{color:var(--text);background:rgba(255,255,255,.07)}
-    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;backdrop-filter:blur(4px)}
-    .modal{background:var(--card);border:1px solid var(--border);border-radius:18px;width:100%;max-width:540px;max-height:92vh;display:flex;flex-direction:column;overflow:hidden}
-    .modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid var(--border);font-weight:700;font-size:15px}
-    .modal-body{padding:22px;overflow-y:auto;flex:1}
-    .modal-footer{padding:16px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
-    .empty{text-align:center;padding:48px 20px;color:var(--muted)}
-    select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a7a9a' fill='none' strokeWidth='1.5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px!important}
-    @media(max-width:900px){.dash-grid{grid-template-columns:1fr}}
-    @media(max-width:600px){
-      .header{padding:0 12px}.content{padding:14px}.hl-grid{grid-template-columns:1fr}
-      .stats{grid-template-columns:1fr 1fr}.stat-val{font-size:16px}
-      th:nth-child(4),th:nth-child(7),th:nth-child(8),td:nth-child(4),td:nth-child(7),td:nth-child(8){display:none}
-    }
-  `}</style>
+  // COMPUTED
+  const withPnl=useMemo(()=>assets.map(a=>({...a,...calcPnl(a)})),[assets]);
+  const filtered=useMemo(()=>{ let r=filterType==="ทั้งหมด"?withPnl:withPnl.filter(a=>a.type===filterType); return [...r].sort((a,b)=>sortKey==="value"?b.value-a.value:sortKey==="pnlPct"?b.pnlPct-a.pnlPct:sortKey==="pnlAmt"?b.pnlAmt-a.pnlAmt:a.name.localeCompare(b.name)); },[withPnl,filterType,sortKey]);
+  const summary=useMemo(()=>{ const tc=withPnl.reduce((s,a)=>s+a.cost,0),tv=withPnl.reduce((s,a)=>s+a.value,0),tp=tv-tc; return {tc,tv,tp,tpp:tc>0?(tp/tc)*100:0,win:withPnl.filter(a=>a.pnlAmt>0).length,lose:withPnl.filter(a=>a.pnlAmt<0).length}; },[withPnl]);
+  const alloc=useMemo(()=>{ const g={}; withPnl.forEach(a=>{g[a.type]=(g[a.type]||0)+a.value;}); return Object.entries(g).map(([label,value])=>({label,value})); },[withPnl]);
+  const topG=useMemo(()=>[...withPnl].sort((a,b)=>b.pnlPct-a.pnlPct)[0],[withPnl]);
+  const topL=useMemo(()=>[...withPnl].sort((a,b)=>a.pnlPct-b.pnlPct)[0],[withPnl]);
 
-  <div className="app">
-    <header className="header">
-      <div className="logo"><div className="logo-dot">📊</div>PortfolioTH</div>
-      <div className="h-actions">
-        <span className={"saved"+(saved?" show":"")}>✓ บันทึก</span>
-        <span className="fx" onClick={()=>{ fetch("https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=thb").then(r=>r.json()).then(d=>{if(d&&d.tether&&d.tether.thb){const v=parseFloat(d.tether.thb);setUsdThb(v);localStorage.setItem("usdThb",String(v));}}); }}>
-          💱 {usdThb.toFixed(1)} ฿/$
-        </span>
-        <button className="icon-btn" onClick={()=>setDarkMode(d=>!d)} title="Toggle theme">
-          <Icon d={darkMode?I.sun:I.moon} size={16}/>
-        </button>
-        <button className="btn-ghost" onClick={exportCSV}><Icon d={I.down} size={14}/> CSV</button>
-        <button className="btn-ghost" onClick={()=>setShowLog(true)}><Icon d={I.clock} size={14}/></button>
-        <button className="btn-ghost" onClick={()=>setShowBackup(true)}><Icon d={I.cloud} size={14}/></button>
-        <button className="btn-primary" onClick={()=>{setEditAsset(null);setShowAdd(true);}}><Icon d={I.plus} size={14}/> เพิ่ม</button>
-      </div>
-    </header>
+  const S = {/* reusable inline style shortcuts */
+    card:{background:"var(--card)",border:"1px solid var(--border)",borderRadius:16,padding:20},
+    btn:{background:"var(--accent)",color:"#fff",border:"none",padding:"8px 16px",borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:6},
+    ghost:{background:"transparent",border:"1px solid var(--border)",color:"var(--muted)",padding:"8px 14px",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:6},
+    iconBtn:{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:6,borderRadius:6,display:"inline-flex",alignItems:"center",justifyContent:"center"},
+  };
 
-    <nav className="tabs">
-      {[["dashboard",I.pie,"Dashboard"],["portfolio",I.chart,"พอร์ต"],["analysis",I.trend,"วิเคราะห์"],["tools",I.calc,"เครื่องมือ"],["goals",I.target,"เป้าหมาย"]].map(([id,ic,lb])=>(
-        <button key={id} className={"tab"+(tab===id?" on":"")} onClick={()=>setTab(id)}><Icon d={ic} size={14}/>{lb}</button>
-      ))}
-    </nav>
+  const lastSync=localStorage.getItem("gsheet_lastSync");
 
-    <main className="content">
-      <PricePanel onUpdate={updatePrices} status={priceStatus} lastUpdated={lastUpdated} autoMin={autoMin} setAutoMin={setAutoMin}/>
-      <SyncBar connected={!!sheetUrl} status={syncStatus} msg={syncMsg} lastSync={localStorage.getItem("gsheet_lastSync")} onSave={()=>doSync("save")} onLoad={()=>doSync("load")} onSync={()=>doSync("sync")} onSetup={()=>setShowSheets(true)}/>
-      {priceError&&priceStatus==="error"&&<div style={{background:"rgba(248,113,113,.1)",border:"1px solid rgba(248,113,113,.25)",borderRadius:10,padding:"9px 14px",fontSize:12,color:"var(--negative)",marginBottom:14}}>⚠️ {priceError}</div>}
+  return (
+    <div style={{minHeight:"100vh",display:"flex",flexDirection:"column",background:"var(--bg)"}}>
+      <style>{`
+        @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        .spin{animation:spin 1s linear infinite}
+        .pulse{animation:pulse 1s infinite}
+        .pos{color:var(--pos)} .neg{color:var(--neg)} .muted{color:var(--muted)}
+        ::-webkit-scrollbar{width:4px;height:4px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+        a{color:var(--accent2)}
+        button:hover{opacity:.85}
+        @media(max-width:600px){.hide-sm{display:none!important}}
+        @media(max-width:900px){.grid-2col{grid-template-columns:1fr!important}}
+      `}</style>
 
-      {/* ── DASHBOARD ── */}
-      {tab==="dashboard"&&<>
-        <div className="stats">
-          <div className="stat-card"><div className="stat-label">มูลค่าพอร์ตรวม</div><div className="stat-val">{fmtUSD(sum.tv)}</div><div className="stat-sub">≈ ฿{fmt(sum.tv*usdThb,0)} • {assets.length} สินทรัพย์</div></div>
-          <div className="stat-card"><div className="stat-label">กำไร/ขาดทุน</div><div className={"stat-val "+pc(sum.tp)}>{fmtUSD(sum.tp)}</div><div className={"stat-sub "+pc(sum.pct)}>{pct(sum.pct)} จากต้นทุน</div></div>
-          <div className="stat-card"><div className="stat-label">ต้นทุนรวม</div><div className="stat-val">{fmtUSD(sum.tc)}</div><div className="stat-sub">Cost Basis</div></div>
-          <div className="stat-card"><div className="stat-label">Win / Loss</div><div className="stat-val"><span className="positive">{sum.wins}</span> <span style={{color:"var(--border)"}}>|</span> <span className="negative">{sum.loses}</span></div><div className="stat-sub">กำไร | ขาดทุน</div></div>
+      {/* HEADER */}
+      <header style={{background:"var(--surface)",borderBottom:"1px solid var(--border)",padding:"0 20px",height:58,display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:100}}>
+        <div style={{display:"flex",alignItems:"center",gap:10,fontWeight:800,fontSize:17,letterSpacing:"-.3px"}}>
+          <div style={{width:28,height:28,background:"linear-gradient(135deg,#3b82f6,#8b5cf6)",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>📊</div>
+          PortfolioTH
         </div>
-        <div className="hl-grid">
-          {topG&&<div className="hl-card"><div style={{width:38,height:38,borderRadius:10,background:"rgba(74,222,128,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>🏆</div><div><div style={{fontSize:11,color:"var(--muted)"}}>Best Performer</div><div style={{fontWeight:700}}>{topG.name}</div><div style={{fontFamily:"var(--mono)",fontSize:13,color:"var(--positive)"}}>{pct(topG.pnlPct)}</div></div><div style={{marginLeft:"auto"}}><Sparkline pos={true}/></div></div>}
-          {topL&&<div className="hl-card"><div style={{width:38,height:38,borderRadius:10,background:"rgba(248,113,113,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>📉</div><div><div style={{fontSize:11,color:"var(--muted)"}}>Worst Performer</div><div style={{fontWeight:700}}>{topL.name}</div><div style={{fontFamily:"var(--mono)",fontSize:13,color:"var(--negative)"}}>{pct(topL.pnlPct)}</div></div><div style={{marginLeft:"auto"}}><Sparkline pos={false}/></div></div>}
+        <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
+          {saved&&<span style={{fontSize:11,color:"var(--pos)",display:"flex",alignItems:"center",gap:3}}><Ic d={I.check} size={11}/> บันทึกแล้ว</span>}
+          <button onClick={()=>{ fetch("https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=thb").then(r=>r.json()).then(d=>{ if(d&&d.tether&&d.tether.thb){const r=parseFloat(d.tether.thb);setUsdThb(r);localStorage.setItem("usdThb",String(r));} }).catch(()=>{}); }} style={{...S.ghost,padding:"5px 10px",fontSize:11}} title="คลิกอัพเดทอัตรา">
+            <Ic d={I.dollar} size={12}/> {usdThb.toFixed(2)} ฿/$
+          </button>
+          <button onClick={()=>setDarkMode(d=>!d)} style={{...S.iconBtn}} title="เปลี่ยน theme"><Ic d={darkMode?I.sun:I.moon} size={16}/></button>
+          <button onClick={exportCSV} style={{...S.ghost,padding:"6px 10px"}} className="hide-sm"><Ic d={I.csv} size={14}/> CSV</button>
+          <button onClick={()=>setShowLog(true)} style={{...S.iconBtn}}><Ic d={I.clock} size={16}/></button>
+          <button onClick={()=>setShowBackup(true)} style={{...S.ghost,padding:"6px 10px"}} className="hide-sm"><Ic d={I.cloud} size={14}/> Backup</button>
+          <button onClick={()=>{setEditAsset(null);setShowModal(true);}} style={{...S.btn,padding:"7px 14px"}}><Ic d={I.plus} size={14}/> เพิ่ม</button>
         </div>
-        <div className="dash-grid">
-          <div className="card"><div className="card-title"><Icon d={I.chart} size={12}/> P&L by Asset</div><BarChart assets={assets}/></div>
-          <div className="card"><div className="card-title"><Icon d={I.pie} size={12}/> Allocation</div>{alloc.length>0&&<Donut data={alloc}/>}</div>
-        </div>
-      </>}
+      </header>
 
-      {/* ── PORTFOLIO ── */}
-      {tab==="portfolio"&&<div className="card">
-        <div className="toolbar">
-          <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>{["ทั้งหมด",...TYPES].map(t=><button key={t} className={"chip"+(filterType===t?" on":"")} onClick={()=>setFilterType(t)}>{t}</button>)}</div>
-          <select value={sortKey} onChange={e=>setSortKey(e.target.value)} style={{background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"5px 28px 5px 10px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit",marginLeft:"auto"}}>
-            <option value="value">มูลค่า</option><option value="pnlPct">%P&L</option><option value="pnlAmt">P&L</option><option value="name">ชื่อ</option>
-          </select>
-        </div>
-        {filtered.length===0?<div className="empty"><h3>ยังไม่มีสินทรัพย์</h3></div>:
-        <div className="table-wrap"><table>
-          <thead><tr><th>สินทรัพย์</th><th>ประเภท</th><th>จำนวน</th><th>ราคา</th><th>มูลค่า</th><th>P&L</th><th>%P&L</th><th>หมายเหตุ</th><th/><tr></thead>
-          <tbody>{filtered.map(a=>{
-            const DOT_COLOR={หุ้น:"#60a5fa",คริปโต:"#f59e0b",ETF:"#34d399",กองทุน:"#f472b6"}[a.type]||"#a78bfa";
-            return <tr key={a.id}>
-              <td><div style={{display:"flex",alignItems:"center",gap:7}}><span style={{width:7,height:7,borderRadius:"50%",background:DOT_COLOR,flexShrink:0}}/><div><div style={{fontWeight:700,fontSize:13}}>{a.ticker}{a.dcaLots?.length>1&&<span className="dca-badge">DCA {a.dcaLots.length}x</span>}</div><div style={{fontSize:11,color:"var(--muted)"}}>{a.name}</div><div className="pm">{fmt(a.currentPrice)} {a.currency}</div></div></div></td>
-              <td><span style={{fontSize:12,color:"var(--muted)"}}>{a.type}</span></td>
-              <td><span className="mono">{fmt(a.qty,a.qty%1===0?0:4)}</span></td>
-              <td><span className="mono">{fmt(a.currentPrice)} <span style={{fontSize:10,color:"var(--muted)"}}>{a.currency}</span></span></td>
-              <td><span className="mono" style={{fontWeight:600}}>{fmt(a.value)}</span></td>
-              <td><span className={"mono "+pc(a.pnlAmt)}>{a.pnlAmt>=0?"+":""}{fmt(a.pnlAmt)}</span></td>
-              <td><span className={"mono "+pc(a.pnlPct)} style={{fontWeight:700}}>{pct(a.pnlPct)}</span></td>
-              <td><span style={{fontSize:11,color:"var(--muted)",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",display:"block"}}>{a.note||"—"}</span></td>
-              <td><div style={{display:"flex",gap:3}}><button className="icon-btn" onClick={()=>{setEditAsset(a);setShowAdd(true);}}><Icon d={I.edit} size={14}/></button><button className="icon-btn" style={{color:"var(--negative)"}} onClick={()=>setConfirmDel({id:a.id,name:a.name||a.ticker})}><Icon d={I.trash} size={14}/></button></div></td>
-            </tr>;
-          })}</tbody>
-        </table></div>}
-      </div>}
+      {/* TABS */}
+      <nav style={{background:"var(--surface)",borderBottom:"1px solid var(--border)",padding:"0 20px",display:"flex",gap:4,overflowX:"auto"}}>
+        {[["dashboard",I.pie,"Dashboard"],["portfolio",I.chart,"พอร์ต"],["analysis",I.tup,"วิเคราะห์"],["tools",I.calc,"เครื่องมือ"],["goals",I.target,"เป้าหมาย"]].map(([id,icon,label])=>(
+          <button key={id} onClick={()=>setTab(id)} style={{padding:"13px 16px",fontSize:13,fontWeight:600,color:tab===id?"var(--accent2)":"var(--muted)",cursor:"pointer",border:"none",borderBottom:"2px solid "+(tab===id?"var(--accent)":"transparent"),background:"none",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap",fontFamily:"inherit",transition:"all .2s"}}>
+            <Ic d={icon} size={14}/>{label}
+          </button>
+        ))}
+      </nav>
 
-      {/* ── ANALYSIS ── */}
-      {tab==="analysis"&&<>
-        <div className="stats">
-          {TYPES.map(type=>{ const its=withPnl.filter(a=>a.type===type); if(!its.length) return null; const tv=its.reduce((s,a)=>s+a.value,0),tc=its.reduce((s,a)=>s+a.cost,0),tp=tv-tc,pp=tc>0?(tp/tc)*100:0; return <div key={type} className="stat-card"><div className="stat-label">{type}</div><div className="stat-val">{fmt(tv)}</div><div className={"stat-sub "+pc(pp)}>{pct(pp)} • {its.length} รายการ</div></div>; })}
-        </div>
-        <div className="card">
-          <div className="card-title"><Icon d={I.trend} size={12}/> Sector Breakdown</div>
-          <div className="table-wrap"><table>
-            <thead><tr><th>Sector</th><th>Tickers</th><th>มูลค่า</th><th>ต้นทุน</th><th>P&L</th><th>%P&L</th></tr></thead>
-            <tbody>{(()=>{ const sg={}; withPnl.forEach(a=>{const k=a.sector||"Other";if(!sg[k])sg[k]=[];sg[k].push(a);}); return Object.entries(sg).map(([s,its])=>{ const v=its.reduce((x,a)=>x+a.value,0),c=its.reduce((x,a)=>x+a.cost,0),pa=v-c,pp=c>0?(pa/c)*100:0; return <tr key={s}><td style={{fontWeight:600}}>{s}</td><td><span className="mono">{its.map(a=>a.ticker).join(", ")}</span></td><td><span className="mono">{fmt(v)}</span></td><td><span className="mono">{fmt(c)}</span></td><td><span className={"mono "+pc(pa)}>{pa>=0?"+":""}{fmt(pa)}</span></td><td><span className={"mono "+pc(pp)} style={{fontWeight:700}}>{pct(pp)}</span></td></tr>; }); })()}</tbody>
-          </table></div>
-        </div>
-      </>}
+      <main style={{flex:1,padding:"20px",maxWidth:1400,margin:"0 auto",width:"100%",display:"flex",flexDirection:"column",gap:16}}>
 
-      {/* ── TOOLS ── */}
-      {tab==="tools"&&<div style={{display:"flex",flexDirection:"column",gap:16}}>
-        <div className="card">
-          <div className="card-title"><Icon d={I.calc} size={12}/> เลือกสินทรัพย์</div>
-          <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
-            {assets.map(a=><button key={a.id} className={"chip"+(activeAsset===a.id?" on":"")} onClick={()=>setActiveAsset(a.id)}>{a.ticker}</button>)}
+        {/* PRICE PANEL */}
+        <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:12,padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+          <div style={{display:"flex",flexDirection:"column",gap:7}}>
+            <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
+              {pxStatus==="loading"&&<span style={{fontSize:12,fontWeight:600,color:"var(--warn)",display:"flex",alignItems:"center",gap:5}}><span className="pulse" style={{width:7,height:7,borderRadius:"50%",background:"var(--warn)",display:"inline-block"}}/> กำลังดึงราคา...</span>}
+              {pxStatus==="done"&&<span style={{fontSize:12,fontWeight:600,color:"var(--pos)",display:"flex",alignItems:"center",gap:5}}><Ic d={I.check} size={12}/> อัพเดทแล้ว</span>}
+              {pxStatus==="idle"&&<span style={{fontSize:12,color:"var(--muted)"}}>อัพเดทล่าสุด: {ago(lastUpd)}</span>}
+              {pxStatus==="error"&&<span style={{fontSize:12,color:"var(--neg)"}}>❌ {pxError}</span>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+              <span style={{fontSize:11,color:"var(--muted)"}}>Auto:</span>
+              {[0,5,15,30,60].map(m=><button key={m} onClick={()=>setAutoMin(m)} style={{padding:"2px 8px",borderRadius:12,fontSize:11,fontWeight:700,cursor:"pointer",border:"1px solid",borderColor:autoMin===m?"var(--accent)":"var(--border)",background:autoMin===m?"var(--accent)":"transparent",color:autoMin===m?"#fff":"var(--muted)",fontFamily:"inherit"}}>{m===0?"ปิด":m+"m"}</button>)}
+            </div>
+          </div>
+          <button onClick={doUpdatePrices} disabled={pxStatus==="loading"} style={{...S.btn,background:"linear-gradient(135deg,#3b82f6,#6366f1)",opacity:pxStatus==="loading"?.6:1}}>
+            <Ic d={I.refresh} size={14} cls={pxStatus==="loading"?"spin":""}/> {pxStatus==="loading"?"กำลังดึง...":"อัพเดทราคา"}
+          </button>
+        </div>
+
+        {/* GOOGLE SHEETS SYNC BAR */}
+        <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:12,padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10,flex:1,flexWrap:"wrap"}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,fontWeight:600}}>
+              <span style={{fontSize:9,color:sheetUrl?"var(--pos)":"var(--muted)"}}>●</span>
+              {sheetUrl?"Google Sheets เชื่อมต่อแล้ว":"ยังไม่ได้เชื่อมต่อ Google Sheets"}
+            </div>
+            {syncSt!=="idle"&&<span style={{fontSize:12,color:syncSt==="loading"?"var(--warn)":syncSt==="done"?"var(--pos)":"var(--neg)",maxWidth:280,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+              {syncSt==="loading"&&<span className="spin" style={{display:"inline-block",marginRight:4}}>⟳</span>}{syncMsg}
+            </span>}
+            {syncSt==="idle"&&sheetUrl&&lastSync&&<span style={{fontSize:11,color:"var(--muted)"}}>Sync ล่าสุด: {new Date(lastSync).toLocaleString("th-TH")}</span>}
+          </div>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            {sheetUrl&&<>
+              <button onClick={()=>doSync("sync")} disabled={syncSt==="loading"} style={{background:"linear-gradient(135deg,#1a73e8,#4285f4)",color:"#fff",border:"none",padding:"6px 14px",borderRadius:8,fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",opacity:syncSt==="loading"?.6:1}}>⇄ Sync</button>
+              <button onClick={()=>doSync("save")} disabled={syncSt==="loading"} style={{...S.ghost,padding:"5px 10px",fontSize:12}} className="hide-sm">↑ Save</button>
+              <button onClick={()=>doSync("load")} disabled={syncSt==="loading"} style={{...S.ghost,padding:"5px 10px",fontSize:12}} className="hide-sm">↓ Load</button>
+            </>}
+            <button onClick={()=>setShowSheets(true)} style={{...S.ghost,padding:"6px 12px",fontSize:12}}>{sheetUrl?"⚙️":"🔗 เชื่อมต่อ"}</button>
           </div>
         </div>
-        {selAsset&&<DCACalc asset={selAsset} usdThb={usdThb}/>}
-        {selAsset&&<CostChart asset={selAsset}/>}
-      </div>}
 
-      {/* ── GOALS ── */}
-      {tab==="goals"&&<GoalsTab assets={assets} goals={goals} saveGoal={saveGoal} deleteGoal={deleteGoal} usdThb={usdThb}/>}
-    </main>
-  </div>
+        {/* DASHBOARD TAB */}
+        {tab==="dashboard"&&<>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:14}}>
+            {[
+              ["มูลค่าพอร์ตรวม",fUSD(summary.tv),"≈ ฿"+f2(summary.tv*usdThb,0)+" • "+assets.length+" สินทรัพย์",""],
+              ["กำไร/ขาดทุนรวม",fUSD(summary.tp),fPct(summary.tpp)+" จากต้นทุน",clr(summary.tp)],
+              ["ต้นทุนรวม",fUSD(summary.tc),"Cost Basis",""],
+              ["Win / Loss",""+(summary.win)+" | "+summary.lose,"กำไร | ขาดทุน",""],
+            ].map(([lb,vl,sub,cl])=>(
+              <div key={lb} style={{...S.card,position:"relative",overflow:"hidden"}}>
+                <div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,var(--accent),#8b5cf6)"}}/>
+                <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:"var(--muted)",marginBottom:7}}>{lb}</div>
+                <div style={{fontFamily:"var(--mono)",fontSize:20,fontWeight:800,color:cl?"var(--"+cl+")":"var(--text)"}}>{vl}</div>
+                <div style={{fontSize:11,color:"var(--muted)",marginTop:5}}>{sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}} className="grid-2col">
+            {topG&&<div style={{...S.card,display:"flex",alignItems:"center",gap:14}}>
+              <div style={{width:40,height:40,borderRadius:12,background:"rgba(74,222,128,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🏆</div>
+              <div><div style={{fontSize:11,color:"var(--muted)"}}>Best Performer</div><div style={{fontWeight:700,fontSize:14,marginTop:2}}>{topG.name}</div><div style={{fontFamily:"var(--mono)",fontSize:13,color:"var(--pos)",marginTop:2}}>{fPct(topG.pnlPct)}</div></div>
+            </div>}
+            {topL&&<div style={{...S.card,display:"flex",alignItems:"center",gap:14}}>
+              <div style={{width:40,height:40,borderRadius:12,background:"rgba(248,113,113,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>📉</div>
+              <div><div style={{fontSize:11,color:"var(--muted)"}}>Worst Performer</div><div style={{fontWeight:700,fontSize:14,marginTop:2}}>{topL.name}</div><div style={{fontFamily:"var(--mono)",fontSize:13,color:"var(--neg)",marginTop:2}}>{fPct(topL.pnlPct)}</div></div>
+            </div>}
+          </div>
+          <GrowthChart assets={assets}/>
+          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:16}} className="grid-2col">
+            <div style={S.card}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>P&L by Asset</div><BarChart assets={assets}/></div>
+            <div style={S.card}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>Allocation</div>{alloc.length>0&&<DonutChart data={alloc}/>}</div>
+          </div>
+        </>}
 
-  {/* Modals */}
-  {(showAdd||editAsset)&&<AssetModal asset={editAsset} onSave={saveAsset} onClose={()=>{setShowAdd(false);setEditAsset(null);}}/>}
-  {showBackup&&<BackupModal assets={assets} onClose={()=>setShowBackup(false)} onRestore={d=>{setAssets(d);setShowBackup(false);}}/>}
-  {showLog&&<LogModal log={priceLog} onClose={()=>setShowLog(false)}/>}
-  {showSheets&&<SheetsModal initUrl={sheetUrl} initToken={sheetToken} onClose={()=>setShowSheets(false)} onSave={(url,tok)=>{setSheetUrl(url);setSheetToken(tok);localStorage.setItem("gsheet_url",url);localStorage.setItem("gsheet_token",tok);setShowSheets(false);setSyncMsg("✅ เชื่อมต่อสำเร็จ!");setSyncStatus("done");setTimeout(()=>setSyncStatus("idle"),3000);}}/>}
-  {confirmDel&&<ConfirmModal name={confirmDel.name} onConfirm={()=>{setAssets(a=>a.filter(x=>x.id!==confirmDel.id));setConfirmDel(null);}} onClose={()=>setConfirmDel(null)}/>}
-  </>;
+        {/* PORTFOLIO TAB */}
+        {tab==="portfolio"&&<div style={S.card}>
+          <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:14,flexWrap:"wrap"}}>
+            <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
+              {["ทั้งหมด",...TYPES].map(t=><button key={t} onClick={()=>setFilterType(t)} style={{padding:"4px 12px",borderRadius:16,fontSize:12,fontWeight:700,cursor:"pointer",border:"1px solid",borderColor:filterType===t?"var(--accent)":"var(--border)",background:filterType===t?"var(--accent)":"transparent",color:filterType===t?"#fff":"var(--muted)",fontFamily:"inherit"}}>{t}</button>)}
+            </div>
+            <select value={sortKey} onChange={e=>setSortKey(e.target.value)} style={{marginLeft:"auto",background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"5px 9px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
+              <option value="value">Sort: มูลค่า</option><option value="pnlPct">Sort: %P&L</option><option value="pnlAmt">Sort: P&L</option><option value="name">Sort: ชื่อ</option>
+            </select>
+          </div>
+          {filtered.length===0?<div style={{textAlign:"center",padding:"50px 0",color:"var(--muted)"}}><div style={{fontSize:18,fontWeight:700,marginBottom:8}}>ยังไม่มีสินทรัพย์</div><div style={{fontSize:13}}>กด "+ เพิ่ม" เพื่อเริ่มต้น</div></div>:
+          <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+            <thead><tr>{["สินทรัพย์","ประเภท","จำนวน","ราคา","มูลค่า","P&L","%P&L","หมายเหตุ",""].map((h,i)=><th key={i} style={{textAlign:"left",padding:"9px 12px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",color:"var(--muted)",borderBottom:"1px solid var(--border)",whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
+            <tbody>{filtered.map(a=><tr key={a.id} style={{borderBottom:"1px solid var(--surface)"}}>
+              <td style={{padding:"11px 12px"}}><div style={{display:"flex",alignItems:"center",gap:7}}>
+                <span style={{width:7,height:7,borderRadius:"50%",background:a.type==="หุ้น"?"#60a5fa":a.type==="คริปโต"?"#f59e0b":a.type==="ETF"?"#34d399":a.type==="กองทุน"?"#f472b6":"#a78bfa",flexShrink:0,display:"inline-block"}}/>
+                <div><div style={{fontWeight:700,fontSize:13,display:"flex",alignItems:"center",gap:6}}>{a.ticker}{a.dcaLots&&a.dcaLots.length>1&&<span style={{background:"rgba(251,191,36,.12)",color:"var(--warn)",fontSize:9,fontWeight:700,padding:"1px 6px",borderRadius:8}}>DCA {a.dcaLots.length}x</span>}</div>
+                <div style={{fontSize:10,color:"var(--muted)"}}>{a.name}</div>
+                <div style={{fontFamily:"var(--mono)",fontSize:10,color:"#94a3b8",display:"none"}} className="show-sm-price">{f2(a.currentPrice)} {a.currency}</div></div>
+              </div></td>
+              <td style={{padding:"11px 12px",fontSize:11,color:"var(--muted)"}}>{a.type}</td>
+              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12}}>{f2(a.qty,a.qty%1===0?0:4)}</td>
+              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12}}>{f2(a.currentPrice)} <span style={{fontSize:10,color:"var(--muted)"}}>{a.currency}</span></td>
+              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12,fontWeight:600}}>{f2(a.value)}</td>
+              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12,color:a.pnlAmt>=0?"var(--pos)":"var(--neg)"}}>{a.pnlAmt>=0?"+":""}{f2(a.pnlAmt)}</td>
+              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12,fontWeight:700,color:a.pnlPct>=0?"var(--pos)":"var(--neg)"}}>{fPct(a.pnlPct)}</td>
+              <td style={{padding:"11px 12px",fontSize:11,color:"var(--muted)",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.note||"—"}</td>
+              <td style={{padding:"11px 12px"}}><div style={{display:"flex",gap:3}}>
+                <button onClick={()=>{setEditAsset(a);setShowModal(true);}} style={{...S.iconBtn,padding:5}}><Ic d={I.edit} size={14}/></button>
+                <button onClick={()=>deleteAsset(a.id)} style={{...S.iconBtn,padding:5}}><Ic d={I.trash} size={14}/></button>
+              </div></td>
+            </tr>)}</tbody>
+          </table></div>}
+        </div>}
+
+        {/* ANALYSIS TAB */}
+        {tab==="analysis"&&<>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(170px,1fr))",gap:14}}>
+            {TYPES.map(type=>{ const items=withPnl.filter(a=>a.type===type); if(!items.length) return null; const tv=items.reduce((s,a)=>s+a.value,0),tc=items.reduce((s,a)=>s+a.cost,0),tp=items.reduce((s,a)=>s+a.pnlAmt,0),pp=tc>0?(tp/tc)*100:0;
+              return <div key={type} style={{...S.card,position:"relative",overflow:"hidden"}}><div style={{position:"absolute",top:0,left:0,right:0,height:3,background:"linear-gradient(90deg,var(--accent),#8b5cf6)"}}/>
+                <div style={{fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".07em",color:"var(--muted)",marginBottom:7}}>{type}</div>
+                <div style={{fontFamily:"var(--mono)",fontSize:18,fontWeight:800}}>{f2(tv)}</div>
+                <div style={{fontSize:11,marginTop:4,color:pp>=0?"var(--pos)":"var(--neg)"}}>{fPct(pp)} • {items.length} รายการ</div>
+              </div>; })}
+          </div>
+          <div style={S.card}>
+            <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>Sector Breakdown</div>
+            <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+              <thead><tr>{["Sector","สินทรัพย์","มูลค่ารวม","ต้นทุนรวม","P&L","%P&L"].map(h=><th key={h} style={{textAlign:"left",padding:"8px 12px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",color:"var(--muted)",borderBottom:"1px solid var(--border)"}}>{h}</th>)}</tr></thead>
+              <tbody>{(()=>{ const s={}; withPnl.forEach(a=>{const k=a.sector||"Other";if(!s[k])s[k]=[];s[k].push(a);});
+                return Object.entries(s).map(([sec,items])=>{ const v=items.reduce((s,a)=>s+a.value,0),c=items.reduce((s,a)=>s+a.cost,0),pa=v-c,pp=c>0?(pa/c)*100:0;
+                  return <tr key={sec} style={{borderBottom:"1px solid var(--surface)"}}><td style={{padding:"10px 12px",fontWeight:700}}>{sec}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:11,color:"var(--muted)"}}>{items.map(i=>i.ticker).join(", ")}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:12}}>{f2(v)}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:12}}>{f2(c)}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:12,color:pa>=0?"var(--pos)":"var(--neg)"}}>{pa>=0?"+":""}{f2(pa)}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:12,fontWeight:700,color:pp>=0?"var(--pos)":"var(--neg)"}}>{fPct(pp)}</td></tr>;
+                });
+              })()}</tbody>
+            </table></div>
+          </div>
+        </>}
+
+        {tab==="tools"&&<ToolsTab assets={assets} usdThb={usdThb}/>}
+        {tab==="goals"&&<GoalsTab assets={assets} goals={goals} saveGoal={saveGoal} deleteGoal={deleteGoal} usdThb={usdThb}/>}
+
+      </main>
+
+      {/* MODALS */}
+      {showModal&&<AssetModal asset={editAsset} onSave={saveAsset} onClose={()=>{setShowModal(false);setEditAsset(null);}}/>}
+      {showBackup&&<BackupModal assets={assets} onClose={()=>setShowBackup(false)} onRestore={d=>{setAssets(d);setShowBackup(false);}}/>}
+      {showLog&&<LogModal log={pxLog} onClose={()=>setShowLog(false)}/>}
+      {showSheets&&<SheetsModal onClose={()=>setShowSheets(false)} initialUrl={sheetUrl} initialToken={sheetTok} onSaved={(u,t)=>{setSheetUrl(u);setSheetTok(t);localStorage.setItem("gsheet_url",u);localStorage.setItem("gsheet_token",t);}}/>}
+      {delTarget&&<ConfirmDialog name={delTarget.name} onConfirm={confirmDel} onCancel={()=>setDelTarget(null)}/>}
+    </div>
+  );
 }
 
-// เปลี่ยนมาใช้ ReactDOM.render (รองรับ React 18 UMD + Babel in-browser ได้ดีกว่า)
-ReactDOM.render(<App/>, document.getElementById("root"));
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
 </script>
 </body>
 </html>
