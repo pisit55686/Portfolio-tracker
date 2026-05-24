@@ -881,7 +881,7 @@ function App() {
           </div>
           <GrowthChart assets={assets}/>
           <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:16}} className="grid-2col">
-            <div style={S.card}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>P&L by Asset</div><BarChart assets={assets}/></div>
+            <div style={S.card}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>P&amp;L by Asset</div><BarChart assets={assets}/></div>
             <div style={S.card}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>Allocation</div>{alloc.length>0&&<DonutChart data={alloc}/>}</div>
           </div>
         </>}
@@ -893,12 +893,12 @@ function App() {
               {["ทั้งหมด",...TYPES].map(t=><button key={t} onClick={()=>setFilterType(t)} style={{padding:"4px 12px",borderRadius:16,fontSize:12,fontWeight:700,cursor:"pointer",border:"1px solid",borderColor:filterType===t?"var(--accent)":"var(--border)",background:filterType===t?"var(--accent)":"transparent",color:filterType===t?"#fff":"var(--muted)",fontFamily:"inherit"}}>{t}</button>)}
             </div>
             <select value={sortKey} onChange={e=>setSortKey(e.target.value)} style={{marginLeft:"auto",background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"5px 9px",borderRadius:8,fontSize:12,cursor:"pointer",fontFamily:"inherit"}}>
-              <option value="value">Sort: มูลค่า</option><option value="pnlPct">Sort: %P&L</option><option value="pnlAmt">Sort: P&L</option><option value="name">Sort: ชื่อ</option>
+              <option value="value">Sort: มูลค่า</option><option value="pnlPct">Sort: %P&amp;L</option><option value="pnlAmt">Sort: P&L</option><option value="name">Sort: ชื่อ</option>
             </select>
           </div>
           {filtered.length===0?<div style={{textAlign:"center",padding:"50px 0",color:"var(--muted)"}}><div style={{fontSize:18,fontWeight:700,marginBottom:8}}>ยังไม่มีสินทรัพย์</div><div style={{fontSize:13}}>กด "+ เพิ่ม" เพื่อเริ่มต้น</div></div>:
           <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-            <thead><tr>{["สินทรัพย์","ประเภท","จำนวน","ราคา","มูลค่า","P&L","%P&L","หมายเหตุ",""].map((h,i)=><th key={i} style={{textAlign:"left",padding:"9px 12px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",color:"var(--muted)",borderBottom:"1px solid var(--border)",whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
+            <thead><tr>{["สินทรัพย์","ประเภท","จำนวน","ราคา","มูลค่า","P&amp;L","%P&amp;L","หมายเหตุ",""].map((h,i)=><th key={i} style={{textAlign:"left",padding:"9px 12px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",color:"var(--muted)",borderBottom:"1px solid var(--border)",whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
             <tbody>{filtered.map(a=><tr key={a.id} style={{borderBottom:"1px solid var(--surface)"}}>
               <td style={{padding:"11px 12px"}}><div style={{display:"flex",alignItems:"center",gap:7}}>
                 <span style={{width:7,height:7,borderRadius:"50%",background:a.type==="หุ้น"?"#60a5fa":a.type==="คริปโต"?"#f59e0b":a.type==="ETF"?"#34d399":a.type==="กองทุน"?"#f472b6":"#a78bfa",flexShrink:0,display:"inline-block"}}/>
@@ -934,7 +934,7 @@ function App() {
           <div style={S.card}>
             <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>Sector Breakdown</div>
             <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-              <thead><tr>{["Sector","สินทรัพย์","มูลค่ารวม","ต้นทุนรวม","P&L","%P&L"].map(h=><th key={h} style={{textAlign:"left",padding:"8px 12px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",color:"var(--muted)",borderBottom:"1px solid var(--border)"}}>{h}</th>)}</tr></thead>
+              <thead><tr>{["Sector","สินทรัพย์","มูลค่ารวม","ต้นทุนรวม","P&amp;L","%P&amp;L"].map(h=><th key={h} style={{textAlign:"left",padding:"8px 12px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",color:"var(--muted)",borderBottom:"1px solid var(--border)"}}>{h}</th>)}</tr></thead>
               <tbody>{(()=>{ const s={}; withPnl.forEach(a=>{const k=a.sector||"Other";if(!s[k])s[k]=[];s[k].push(a);});
                 return Object.entries(s).map(([sec,items])=>{ const v=items.reduce((s,a)=>s+a.value,0),c=items.reduce((s,a)=>s+a.cost,0),pa=v-c,pp=c>0?(pa/c)*100:0;
                   return <tr key={sec} style={{borderBottom:"1px solid var(--surface)"}}><td style={{padding:"10px 12px",fontWeight:700}}>{sec}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:11,color:"var(--muted)"}}>{items.map(i=>i.ticker).join(", ")}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:12}}>{f2(v)}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:12}}>{f2(c)}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:12,color:pa>=0?"var(--pos)":"var(--neg)"}}>{pa>=0?"+":""}{f2(pa)}</td><td style={{padding:"10px 12px",fontFamily:"var(--mono)",fontSize:12,fontWeight:700,color:pp>=0?"var(--pos)":"var(--neg)"}}>{fPct(pp)}</td></tr>;
