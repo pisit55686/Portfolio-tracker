@@ -424,8 +424,11 @@ const SheetsModal = ({onClose,initialUrl,initialToken,onSaved}) => {
     if(!url||!token){setSt("err");setMsg("กรุณากรอก URL และ Token");return;}
     setSt("testing");setMsg("กำลังทดสอบ...");
     try{
-      const r=await fetch(url.trim()+"?action=ping&token="+encodeURIComponent(token.trim()),{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action:"ping",token:token.trim()})});
-      const d=await r.json();
+      const testUrl = url.trim()+"?action=ping&token="+encodeURIComponent(token.trim());
+      const r = await fetch(testUrl, {method:"GET", redirect:"follow"});
+      const text = await r.text();
+      let d;
+      try { d = JSON.parse(text); } catch(e) { throw new Error("ไม่ได้รับ JSON — เช็ค URL ว่าลงท้าย /exec"); }
       if(d.ok){setSt("ok");setMsg("✅ เชื่อมต่อสำเร็จ!");}
       else{setSt("err");setMsg("❌ "+(d.error||"Token ไม่ถูกต้อง"));}
     }catch(e){setSt("err");setMsg("❌ "+e.message);}
@@ -714,9 +717,16 @@ function App() {
   // GOOGLE SHEETS SYNC
   const sheetApi=async(action,body={})=>{
     if(!sheetUrl||!sheetTok) throw new Error("ยังไม่ได้ตั้งค่า Google Sheets");
-    const r=await fetch(sheetUrl+"?action="+action+"&token="+encodeURIComponent(sheetTok),{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({action,token:sheetTok,...body})});
+    // Use GET + encoded payload to avoid CORS preflight (Apps Script limitation)
+    const payload = encodeURIComponent(JSON.stringify(body));
+    const url = sheetUrl+"?action="+action+"&token="+encodeURIComponent(sheetTok)+"&payload="+payload;
+    const r = await fetch(url, {method:"GET", redirect:"follow"});
     if(!r.ok) throw new Error("HTTP "+r.status);
-    const d=await r.json(); if(!d.ok) throw new Error(d.error||"Error"); return d;
+    const text = await r.text();
+    let d;
+    try { d = JSON.parse(text); } catch(e) { throw new Error("Invalid response: "+text.slice(0,100)); }
+    if(!d.ok) throw new Error(d.error||"Error");
+    return d;
   };
   const doSync=async(action)=>{
     setSyncSt("loading"); setSyncMsg("กำลัง "+action+"...");
