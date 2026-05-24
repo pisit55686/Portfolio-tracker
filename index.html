@@ -715,18 +715,32 @@ function App() {
   },[assets]);
 
   // GOOGLE SHEETS SYNC
+  // Apps Script fetch helper
+  // GET for read-only (ping, load) — no CORS issue
+  // POST with text/plain for write (save, sync) — avoids CORS preflight
   const sheetApi=async(action,body={})=>{
     if(!sheetUrl||!sheetTok) throw new Error("ยังไม่ได้ตั้งค่า Google Sheets");
-    // Use GET + encoded payload to avoid CORS preflight (Apps Script limitation)
-    const payload = encodeURIComponent(JSON.stringify(body));
-    const url = sheetUrl+"?action="+action+"&token="+encodeURIComponent(sheetTok)+"&payload="+payload;
-    const r = await fetch(url, {method:"GET", redirect:"follow"});
-    if(!r.ok) throw new Error("HTTP "+r.status);
-    const text = await r.text();
-    let d;
-    try { d = JSON.parse(text); } catch(e) { throw new Error("Invalid response: "+text.slice(0,100)); }
-    if(!d.ok) throw new Error(d.error||"Error");
-    return d;
+    const baseUrl = sheetUrl+"?action="+action+"&token="+encodeURIComponent(sheetTok);
+
+    if(action==="ping"||action==="load"){
+      // GET — safe, no preflight
+      const r = await fetch(baseUrl, {method:"GET", redirect:"follow"});
+      const text = await r.text();
+      let d; try{d=JSON.parse(text);}catch(e){throw new Error("Bad response: "+text.slice(0,80));}
+      if(!d.ok) throw new Error(d.error||"Error"); return d;
+    } else {
+      // POST with Content-Type: text/plain — does NOT trigger CORS preflight
+      // Apps Script accepts this and reads e.postData.contents
+      const r = await fetch(baseUrl, {
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=UTF-8"},
+        body: JSON.stringify({action, token:sheetTok, ...body}),
+        redirect:"follow"
+      });
+      const text = await r.text();
+      let d; try{d=JSON.parse(text);}catch(e){throw new Error("Bad response: "+text.slice(0,80));}
+      if(!d.ok) throw new Error(d.error||"Error"); return d;
+    }
   };
   const doSync=async(action)=>{
     setSyncSt("loading"); setSyncMsg("กำลัง "+action+"...");
@@ -740,7 +754,7 @@ function App() {
       localStorage.setItem("gsheet_lastSync",now);
       setSyncSt("done"); setSyncMsg("✅ "+(action==="save"?"Save":action==="load"?"Load":"Sync")+" สำเร็จ • "+new Date().toLocaleTimeString("th-TH"));
       setTimeout(()=>setSyncSt("idle"),4000);
-    }catch(e){ setSyncSt("error"); setSyncMsg("❌ "+e.message); setTimeout(()=>setSyncSt("idle"),6000); }
+    }catch(e){ setSyncSt("error"); setSyncMsg("❌ "+e.message+(e.message.includes("Failed to fetch")?" — เช็คว่า Deploy เป็น Anyone และ URL ลงท้าย /exec":"")); setTimeout(()=>setSyncSt("idle"),8000); }
   };
 
   // ASSET CRUD
