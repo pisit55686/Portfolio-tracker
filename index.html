@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>PortfolioTEO</title>
+<title>PortfolioTH — Investment Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
@@ -1126,6 +1126,69 @@ const GoalsTab = ({ assets, goals, saveGoal, deleteGoal, usdThb }) => {
 };
 
 
+
+// ─── Google Sheets Setup Form ─────────────────────────────────────────────────
+const SheetSetupForm = ({ initialUrl, initialToken, onSave, pingSheet }) => {
+  const [url,    setUrl]    = useState(initialUrl  || "");
+  const [token,  setToken]  = useState(initialToken|| "");
+  const [status, setStatus] = useState("idle"); // idle|testing|ok|error
+  const [msg,    setMsg]    = useState("");
+
+  const inputS = {background:"var(--surface)",border:"1px solid var(--border)",color:"var(--text)",padding:"10px 12px",borderRadius:8,fontSize:13,fontFamily:"inherit",outline:"none",width:"100%",marginTop:6};
+
+  const test = async () => {
+    if (!url || !token) { setStatus("error"); setMsg("กรุณากรอก URL และ Token"); return; }
+    setStatus("testing"); setMsg("กำลังทดสอบ...");
+    try {
+      const ok = await pingSheet(url.trim(), token.trim());
+      if (ok) { setStatus("ok"); setMsg("✅ เชื่อมต่อสำเร็จ! กด Save เพื่อบันทึก"); }
+      else     { setStatus("error"); setMsg("❌ Token ไม่ถูกต้อง หรือ Script ไม่ได้ Deploy"); }
+    } catch(e) { setStatus("error"); setMsg("❌ " + e.message); }
+  };
+
+  return (
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <div style={{background:"rgba(59,130,246,.08)",border:"1px solid rgba(59,130,246,.2)",borderRadius:10,padding:"12px 14px",fontSize:12,color:"var(--muted)",lineHeight:1.7}}>
+        <strong style={{color:"var(--accent2)"}}>วิธีตั้งค่า:</strong><br/>
+        1. เปิด <a href="https://script.google.com" target="_blank" style={{color:"var(--accent2)"}}>script.google.com</a> → New project<br/>
+        2. วางโค้ดจากไฟล์ <code>GoogleAppsScript.gs</code> ที่ดาวน์โหลดไว้<br/>
+        3. แก้ <code>SECRET_TOKEN</code> ให้เป็นรหัสลับของคุณ<br/>
+        4. Deploy → New deployment → Web app → Anyone → Copy URL<br/>
+        5. วาง URL และ Token ด้านล่าง
+      </div>
+
+      <div>
+        <label style={{fontSize:12,fontWeight:700,color:"var(--muted)"}}>Apps Script Web App URL</label>
+        <input value={url} onChange={e=>setUrl(e.target.value)}
+          placeholder="https://script.google.com/macros/s/.../exec" style={inputS}/>
+      </div>
+
+      <div>
+        <label style={{fontSize:12,fontWeight:700,color:"var(--muted)"}}>Secret Token (ต้องตรงกับใน Code.gs)</label>
+        <input type="password" value={token} onChange={e=>setToken(e.target.value)}
+          placeholder="YOUR_SECRET_TOKEN_HERE" style={inputS}/>
+      </div>
+
+      {status !== "idle" && (
+        <div style={{
+          padding:"10px 14px",borderRadius:8,fontSize:13,
+          background: status==="ok" ? "rgba(74,222,128,.1)" : status==="error" ? "rgba(248,113,113,.1)" : "rgba(251,191,36,.1)",
+          color: status==="ok" ? "var(--positive)" : status==="error" ? "var(--negative)" : "var(--warning)"
+        }}>{msg}</div>
+      )}
+
+      <div style={{display:"flex",gap:10,justifyContent:"flex-end",marginTop:4}}>
+        <button className="btn-ghost" onClick={test} disabled={status==="testing"}>
+          🔌 ทดสอบการเชื่อมต่อ
+        </button>
+        <button className="btn-primary" onClick={()=>onSave(url.trim(),token.trim())} disabled={!url||!token}>
+          <Icon d={Icons.check} size={15}/> บันทึก
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 function App() {
   const SK = "portfolioTH_v3";
@@ -1205,6 +1268,83 @@ function App() {
   const alloc = useMemo(()=>{ const g={}; withPnl.forEach(a=>{g[a.type]=(g[a.type]||0)+a.value;}); return Object.entries(g).map(([label,value])=>({label,value})); },[withPnl]);
   const topGainer = useMemo(()=>[...withPnl].sort((a,b)=>b.pnlPct-a.pnlPct)[0],[withPnl]);
   const topLoser = useMemo(()=>[...withPnl].sort((a,b)=>a.pnlPct-b.pnlPct)[0],[withPnl]);
+
+
+  // ── Google Sheets Sync ─────────────────────────────────────────────────────
+  const sheetApi = async (action, body = {}) => {
+    if (!sheetUrl || !sheetToken) throw new Error("ยังไม่ได้ตั้งค่า Google Sheets URL และ Token");
+    const url = sheetUrl + "?action=" + action + "&token=" + encodeURIComponent(sheetToken);
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action, token: sheetToken, ...body }),
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    if (!data.ok) throw new Error(data.error || "Unknown error");
+    return data;
+  };
+
+  const saveToSheet = async () => {
+    setSyncStatus("loading"); setSyncMsg("กำลัง save ขึ้น Google Sheets...");
+    try {
+      const now = new Date().toISOString();
+      const assetsWithTs = assets.map(a => ({ ...a, syncedAt: now }));
+      const result = await sheetApi("save", { assets: assetsWithTs });
+      setSyncStatus("done");
+      setSyncMsg("✅ Save สำเร็จ " + result.count + " รายการ • " + new Date().toLocaleTimeString("th-TH"));
+      localStorage.setItem("gsheet_lastSync", now);
+      setTimeout(() => setSyncStatus("idle"), 4000);
+    } catch(err) {
+      setSyncStatus("error"); setSyncMsg("❌ " + err.message);
+      setTimeout(() => setSyncStatus("idle"), 6000);
+    }
+  };
+
+  const loadFromSheet = async () => {
+    setSyncStatus("loading"); setSyncMsg("กำลังโหลดจาก Google Sheets...");
+    try {
+      const result = await sheetApi("load");
+      if (result.assets && result.assets.length > 0) {
+        setAssets(result.assets);
+        setSyncStatus("done");
+        setSyncMsg("✅ โหลด " + result.assets.length + " รายการสำเร็จ • บันทึกลง localStorage แล้ว");
+        setTimeout(() => setSyncStatus("idle"), 4000);
+      } else {
+        setSyncStatus("done"); setSyncMsg("⚠️ ไม่พบข้อมูลใน Google Sheets");
+        setTimeout(() => setSyncStatus("idle"), 4000);
+      }
+    } catch(err) {
+      setSyncStatus("error"); setSyncMsg("❌ " + err.message);
+      setTimeout(() => setSyncStatus("idle"), 6000);
+    }
+  };
+
+  const syncBoth = async () => {
+    setSyncStatus("loading"); setSyncMsg("กำลัง sync...");
+    try {
+      const now = new Date().toISOString();
+      const assetsWithTs = assets.map(a => ({ ...a, syncedAt: a.syncedAt || now }));
+      const result = await sheetApi("sync", { assets: assetsWithTs });
+      setAssets(result.assets);
+      setSyncStatus("done");
+      setSyncMsg("✅ Sync สำเร็จ • " + result.merged + " รายการ • " + new Date().toLocaleTimeString("th-TH"));
+      localStorage.setItem("gsheet_lastSync", now);
+      setTimeout(() => setSyncStatus("idle"), 4000);
+    } catch(err) {
+      setSyncStatus("error"); setSyncMsg("❌ " + err.message);
+      setTimeout(() => setSyncStatus("idle"), 6000);
+    }
+  };
+
+  const pingSheet = async (url, token) => {
+    const res = await fetch(url + "?action=ping&token=" + encodeURIComponent(token), {
+      method: "POST", headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({ action: "ping", token }),
+    });
+    const data = await res.json();
+    return data.ok === true;
+  };
 
   const exportCSV = () => {
     const rows = [["Date","Ticker","Name","Type","Qty","Avg Cost","Current Price","Currency","Cost Basis","Market Value","P&L","P&L%","Sector","Note"]];
@@ -1369,6 +1509,27 @@ function App() {
       .chart-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
       .legend-item-sm{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)}
 
+
+      .sync-bar{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+      .sync-bar-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap;flex:1;min-width:0}
+      .sync-bar-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+      .sync-indicator{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;white-space:nowrap}
+      .sync-dot{font-size:10px}
+      .sync-dot.connected{color:#4ade80}
+      .sync-dot.disconnected{color:#5a7a9a}
+      .sync-msg{font-size:12px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+      .sync-msg.loading{color:var(--warning)}
+      .sync-msg.done{color:var(--positive)}
+      .sync-msg.error{color:var(--negative)}
+      .sync-spin{display:inline-block;animation:spin 1s linear infinite;margin-right:4px}
+      .btn-sync{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,#1a73e8,#4285f4);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+      .btn-sync:hover:not(:disabled){filter:brightness(1.15)}
+      .btn-sync:disabled{opacity:.5;cursor:not-allowed}
+      .btn-sync-sm{display:inline-flex;align-items:center;background:var(--surface);border:1px solid var(--border);color:var(--text);padding:6px 10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+      .btn-sync-sm:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+      .btn-sync-sm:disabled{opacity:.5;cursor:not-allowed}
+      .btn-sync-setup{display:inline-flex;align-items:center;background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;white-space:nowrap}
+      .btn-sync-setup:hover{border-color:var(--accent2);color:var(--text)}
       .be-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
       .be-row .mono{color:var(--text)}
       .be-divider{height:1px;background:var(--border);margin:4px 0}
@@ -1423,6 +1584,46 @@ function App() {
 
       <main className="content">
         <PricePanel assets={assets} onUpdatePrices={handleUpdatePrices} priceStatus={priceStatus} lastUpdated={lastUpdated} autoRefreshMin={autoRefreshMin} setAutoRefreshMin={setAutoRefreshMin}/>
+
+        {/* ── Google Sheets Sync Bar ─────────────────────────────────────── */}
+        <div className="sync-bar">
+          <div className="sync-bar-left">
+            <div className="sync-indicator">
+              {sheetUrl
+                ? <span className="sync-dot connected" title="เชื่อมต่อกับ Google Sheets แล้ว">●</span>
+                : <span className="sync-dot disconnected" title="ยังไม่ได้ตั้งค่า Google Sheets">●</span>}
+              <span className="sync-label">{sheetUrl ? "Google Sheets" : "ยังไม่ได้เชื่อมต่อ"}</span>
+            </div>
+            {syncStatus !== "idle" && (
+              <span className={`sync-msg ${syncStatus}`}>
+                {syncStatus === "loading" && <span className="sync-spin">⟳</span>}
+                {syncMsg}
+              </span>
+            )}
+            {syncStatus === "idle" && sheetUrl && (
+              <span style={{fontSize:11,color:"var(--muted)"}}>
+                Last sync: {localStorage.getItem("gsheet_lastSync") ? new Date(localStorage.getItem("gsheet_lastSync")).toLocaleString("th-TH") : "ไม่เคย"}
+              </span>
+            )}
+          </div>
+          <div className="sync-bar-actions">
+            {sheetUrl && <>
+              <button className="btn-sync" onClick={syncBoth} disabled={syncStatus==="loading"} title="Sync 2 ทาง: local ↔ Sheets">
+                ⇄ Sync
+              </button>
+              <button className="btn-sync-sm" onClick={saveToSheet} disabled={syncStatus==="loading"} title="อัพโหลด local → Sheets">
+                ↑ Save
+              </button>
+              <button className="btn-sync-sm" onClick={loadFromSheet} disabled={syncStatus==="loading"} title="ดาวน์โหลด Sheets → local">
+                ↓ Load
+              </button>
+            </>}
+            <button className="btn-sync-setup" onClick={()=>setShowSyncSetup(true)}>
+              {sheetUrl ? "⚙️" : "🔗 เชื่อมต่อ Sheets"}
+            </button>
+          </div>
+        </div>
+
         {priceError && priceStatus==="error" && <div className="error-banner">⚠️ ดึงราคาไม่สำเร็จ: {priceError}</div>}
 
         {tab==="dashboard" && <>
@@ -1502,6 +1703,35 @@ function App() {
     {showModal && <Modal asset={editAsset} onSave={saveAsset} onClose={()=>{setShowModal(false);setEditAsset(null);}}/>}
     {showDrive && <DriveModal assets={assets} onClose={()=>setShowDrive(false)} onRestore={d=>{setAssets(d);setShowDrive(false);}}/>}
     {showLog && <PriceLogModal log={priceLog} onClose={()=>setShowLog(false)}/>}
+
+      {/* ── Google Sheets Setup Modal ──────────────────────────────────────── */}
+      {showSyncSetup && (
+        <div className="modal-overlay" onClick={()=>setShowSyncSetup(false)}>
+          <div className="modal" style={{maxWidth:480}} onClick={e=>e.stopPropagation()}>
+            <div className="modal-header">
+              <span>🔗 เชื่อมต่อ Google Sheets</span>
+              <button className="icon-btn" onClick={()=>setShowSyncSetup(false)}><Icon d={Icons.x}/></button>
+            </div>
+            <div className="modal-body">
+              <SheetSetupForm
+                initialUrl={sheetUrl}
+                initialToken={sheetToken}
+                onSave={(url, token) => {
+                  setSheetUrl(url);
+                  setSheetToken(token);
+                  localStorage.setItem("gsheet_url", url);
+                  localStorage.setItem("gsheet_token", token);
+                  setShowSyncSetup(false);
+                  setSyncMsg("✅ เชื่อมต่อสำเร็จ!");
+                  setSyncStatus("done");
+                  setTimeout(()=>setSyncStatus("idle"), 3000);
+                }}
+                pingSheet={pingSheet}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     {confirmDelete && <div className="modal-overlay" onClick={()=>setConfirmDelete(null)}>
       <div className="confirm-dialog" onClick={e=>e.stopPropagation()}>
         <div className="confirm-icon">🗑️</div>
