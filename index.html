@@ -349,7 +349,7 @@ const AssetModal = ({asset,onSave,onClose}) => {
             {lots.map(lt=><div key={lt.id} style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 28px",gap:"5px 7px",marginBottom:5,alignItems:"center"}}>
               <input type="number" value={lt.qty} onChange={e=>sl(lt.id,"qty",e.target.value)} placeholder="0" style={is}/>
               <input type="number" value={lt.price} onChange={e=>sl(lt.id,"price",e.target.value)} placeholder="0.00" style={is}/>
-              <input type="date" value={lt.date} onChange={e=>sl(lt.id,"date",e.target.value)} style={{...is,fontSize:11}}/>
+              <input type="date" value={lt.date} onChange={e=>sl(lt.id,"date",e.target.value)} style={{...is,fontSize:11}} className="dca-date-col"/>
               <button onClick={()=>setLots(ls=>ls.length>1?ls.filter(l=>l.id!==lt.id):ls)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:4,display:"flex",alignItems:"center"}}><Ic d={I.x} size={13}/></button>
             </div>)}
             <button onClick={()=>setLots(ls=>[...ls,newLot()])} style={{background:"transparent",border:"1px dashed var(--border)",color:"var(--muted)",padding:"5px 12px",borderRadius:7,fontSize:12,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",gap:4}}><Ic d={I.plus} size={12}/> เพิ่มรอบซื้อ</button>
@@ -509,7 +509,7 @@ const ToolsTab = ({assets,usdThb}) => {
       <div style={{display:"flex",gap:8,flexWrap:"wrap"}}>
         {assets.map(x=><button key={x.id} onClick={()=>setAid(x.id)} style={{padding:"4px 12px",borderRadius:16,fontSize:12,fontWeight:700,cursor:"pointer",border:"1px solid",borderColor:aid===x.id?"var(--accent)":"var(--border)",background:aid===x.id?"var(--accent)":"transparent",color:aid===x.id?"#fff":"var(--muted)",fontFamily:"inherit"}}>{x.ticker}</button>)}
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}} className="grid-tools">
         {/* Break-even */}
         <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:16,padding:18}}>
           <div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>Break-even Analysis</div>
@@ -643,7 +643,7 @@ const GoalsTab = ({assets,goals,saveGoal,deleteGoal,usdThb}) => {
             <div style={{width:prog+"%",height:"100%",borderRadius:8,transition:"width .8s",background:done?"linear-gradient(90deg,var(--pos),#22d3ee)":prog>75?"linear-gradient(90deg,var(--accent),#8b5cf6)":"linear-gradient(90deg,#1e3a5f,var(--accent))"}}/>
             {prog>12&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",paddingLeft:9,fontSize:9,color:"#fff",fontWeight:700}}>{prog.toFixed(0)}%</div>}
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))",gap:8}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(110px,1fr))",gap:8}} className="goal-stat-grid">
             {[["ยังขาดอีก",done?"✓ บรรลุ!":fUSD(tgt-tv),done?"pos":"warn"],g.deadline&&["วันที่เป้าหมาย",daysLeft<=0?"หมดเวลา":daysLeft+" วัน",daysLeft<30&&daysLeft>0?"neg":"text"],moToGoal&&["ถึงเป้าใน (DCA)","~"+moToGoal+" เดือน","accent2"],["เป้า (THB)","฿"+f2(tgt*usdThb,0),"muted"]].filter(Boolean).map(([lb,vl,cl])=>(
               <div key={lb} style={{background:"var(--surface)",borderRadius:9,padding:"9px 12px"}}>
                 <div style={{fontSize:10,color:"var(--muted)",marginBottom:3}}>{lb}</div>
@@ -782,7 +782,7 @@ function App() {
   const topL=useMemo(()=>[...withPnl].sort((a,b)=>a.pnlPct-b.pnlPct)[0],[withPnl]);
 
   const S = {/* reusable inline style shortcuts */
-    card:{background:"var(--card)",border:"1px solid var(--border)",borderRadius:16,padding:20},
+    card:{background:"var(--card)",border:"1px solid var(--border)",borderRadius:14,padding:16},
     btn:{background:"var(--accent)",color:"#fff",border:"none",padding:"8px 16px",borderRadius:10,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:6},
     ghost:{background:"transparent",border:"1px solid var(--border)",color:"var(--muted)",padding:"8px 14px",borderRadius:10,fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:6},
     iconBtn:{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:6,borderRadius:6,display:"inline-flex",alignItems:"center",justifyContent:"center"},
@@ -798,45 +798,91 @@ function App() {
         .spin{animation:spin 1s linear infinite}
         .pulse{animation:pulse 1s infinite}
         .pos{color:var(--pos)} .neg{color:var(--neg)} .muted{color:var(--muted)}
-        ::-webkit-scrollbar{width:4px;height:4px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+        ::-webkit-scrollbar{width:3px;height:3px} ::-webkit-scrollbar-track{background:transparent} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+        nav::-webkit-scrollbar{display:none}
         a{color:var(--accent2)}
-        button:hover{opacity:.85}
-        @media(max-width:600px){.hide-sm{display:none!important}}
-        @media(max-width:900px){.grid-2col{grid-template-columns:1fr!important}}
+        button:active{opacity:.75}
+        /* Desktop hover */
+        @media(hover:hover){button:hover{opacity:.85}}
+        /* ── Responsive ───────────────────────────────── */
+        @media(max-width:380px){
+          .hide-xs{display:none!important}
+        }
+        /* Mobile portrait (< 640px) */
+        @media(max-width:640px){
+          .hide-sm{display:none!important}
+          /* All 2-col grids collapse to 1 col */
+          .grid-2col,.grid-tools,.grid-goals,.dash-bottom-grid{
+            grid-template-columns:1fr!important
+          }
+          /* Stats always 2 col on mobile */
+          .stats-grid-resp{grid-template-columns:repeat(2,1fr)!important}
+          /* Price + sync panels stack vertically */
+          .px-panel,.sync-bar-wrap{
+            flex-direction:column!important;
+            align-items:stretch!important
+          }
+          .px-panel>div,.sync-bar-wrap>div{width:100%}
+          /* Table: hide note + sector cols */
+          .tbl-hide-sm{display:none!important}
+          /* Tabs smaller text */
+          .tabs-nav button{padding:11px 10px!important;font-size:11px!important;gap:3px!important}
+          /* Cards tighter padding */
+          .responsive-card{padding:14px!important}
+          /* Goal cards */
+          .goal-stat-grid{grid-template-columns:1fr 1fr!important}
+          /* Sync buttons wrap */
+          .sync-btns{flex-wrap:wrap!important}
+          /* DCA lot rows */
+          .dca-lot-row{grid-template-columns:1fr 1fr 28px!important}
+          .dca-date-col{display:none!important}
+          /* Tools break-even + DCA always 1 col */
+          .grid-tools{grid-template-columns:1fr!important}
+          /* Header padding */
+        }
+        /* Tablet (640–900px) */
+        @media(min-width:641px){
+          .stats-grid-resp{grid-template-columns:repeat(auto-fit,minmax(170px,1fr))!important}
+        }
+        @media(max-width:900px){
+          .grid-2col,.dash-bottom-grid{grid-template-columns:1fr!important}
+        }
       `}</style>
 
       {/* HEADER */}
-      <header style={{background:"var(--surface)",borderBottom:"1px solid var(--border)",padding:"0 20px",height:58,display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:100}}>
-        <div style={{display:"flex",alignItems:"center",gap:10,fontWeight:800,fontSize:17,letterSpacing:"-.3px"}}>
-          <div style={{width:28,height:28,background:"linear-gradient(135deg,#3b82f6,#8b5cf6)",borderRadius:8,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14}}>📊</div>
-          PortfolioTH
+      <header style={{background:"var(--surface)",borderBottom:"1px solid var(--border)",padding:"0 16px",height:54,display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:100,gap:8}}>
+        <div style={{display:"flex",alignItems:"center",gap:8,fontWeight:800,fontSize:16,letterSpacing:"-.3px",flexShrink:0}}>
+          <div style={{width:26,height:26,background:"linear-gradient(135deg,#3b82f6,#8b5cf6)",borderRadius:7,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13}}>📊</div>
+          <span className="hide-xs">PortfolioTH</span>
         </div>
-        <div style={{display:"flex",alignItems:"center",gap:6,flexWrap:"wrap"}}>
-          {saved&&<span style={{fontSize:11,color:"var(--pos)",display:"flex",alignItems:"center",gap:3}}><Ic d={I.check} size={11}/> บันทึกแล้ว</span>}
-          <button onClick={()=>{ fetch("https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=thb").then(r=>r.json()).then(d=>{ if(d&&d.tether&&d.tether.thb){const r=parseFloat(d.tether.thb);setUsdThb(r);localStorage.setItem("usdThb",String(r));} }).catch(()=>{}); }} style={{...S.ghost,padding:"5px 10px",fontSize:11}} title="คลิกอัพเดทอัตรา">
-            <Ic d={I.dollar} size={12}/> {usdThb.toFixed(2)} ฿/$
+        <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+          {saved&&<span style={{fontSize:10,color:"var(--pos)",display:"flex",alignItems:"center",gap:2,whiteSpace:"nowrap"}}><Ic d={I.check} size={10}/> <span className="hide-xs">บันทึก</span></span>}
+          <button onClick={()=>{ fetch("https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=thb").then(r=>r.json()).then(d=>{ if(d&&d.tether&&d.tether.thb){const rate=parseFloat(d.tether.thb);setUsdThb(rate);localStorage.setItem("usdThb",String(rate));} }).catch(()=>{}); }} style={{background:"var(--surface)",border:"1px solid var(--border)",color:"var(--muted)",padding:"4px 8px",borderRadius:14,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",whiteSpace:"nowrap"}} title="อัพเดทอัตรา">
+            {usdThb.toFixed(1)}฿
           </button>
-          <button onClick={()=>setDarkMode(d=>!d)} style={{...S.iconBtn}} title="เปลี่ยน theme"><Ic d={darkMode?I.sun:I.moon} size={16}/></button>
-          <button onClick={exportCSV} style={{...S.ghost,padding:"6px 10px"}} className="hide-sm"><Ic d={I.csv} size={14}/> CSV</button>
-          <button onClick={()=>setShowLog(true)} style={{...S.iconBtn}}><Ic d={I.clock} size={16}/></button>
-          <button onClick={()=>setShowBackup(true)} style={{...S.ghost,padding:"6px 10px"}} className="hide-sm"><Ic d={I.cloud} size={14}/> Backup</button>
-          <button onClick={()=>{setEditAsset(null);setShowModal(true);}} style={{...S.btn,padding:"7px 14px"}}><Ic d={I.plus} size={14}/> เพิ่ม</button>
+          <button onClick={()=>setDarkMode(d=>!d)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:6,borderRadius:6,display:"flex"}}><Ic d={darkMode?I.sun:I.moon} size={16}/></button>
+          <button onClick={()=>setShowBackup(true)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:6,borderRadius:6,display:"flex"}} title="Backup"><Ic d={I.cloud} size={15}/></button>
+          <button onClick={exportCSV} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:6,borderRadius:6,display:"flex"}} title="Export CSV" className="hide-xs"><Ic d={I.csv} size={15}/></button>
+          <button onClick={()=>setShowLog(true)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",padding:6,borderRadius:6,display:"flex"}} className="hide-xs"><Ic d={I.clock} size={15}/></button>
+          <button onClick={()=>{setEditAsset(null);setShowModal(true);}} style={{background:"var(--accent)",color:"#fff",border:"none",padding:"6px 12px",borderRadius:9,fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"inline-flex",alignItems:"center",gap:4,whiteSpace:"nowrap"}}>
+            <Ic d={I.plus} size={14}/> เพิ่ม
+          </button>
         </div>
       </header>
 
       {/* TABS */}
-      <nav style={{background:"var(--surface)",borderBottom:"1px solid var(--border)",padding:"0 20px",display:"flex",gap:4,overflowX:"auto"}}>
-        {[["dashboard",I.pie,"Dashboard"],["portfolio",I.chart,"พอร์ต"],["analysis",I.tup,"วิเคราะห์"],["tools",I.calc,"เครื่องมือ"],["goals",I.target,"เป้าหมาย"]].map(([id,icon,label])=>(
-          <button key={id} onClick={()=>setTab(id)} style={{padding:"13px 16px",fontSize:13,fontWeight:600,color:tab===id?"var(--accent2)":"var(--muted)",cursor:"pointer",border:"none",borderBottom:"2px solid "+(tab===id?"var(--accent)":"transparent"),background:"none",display:"flex",alignItems:"center",gap:6,whiteSpace:"nowrap",fontFamily:"inherit",transition:"all .2s"}}>
-            <Ic d={icon} size={14}/>{label}
+      <nav style={{background:"var(--surface)",borderBottom:"1px solid var(--border)",padding:"0 12px",display:"flex",gap:0,overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}}>
+        {[["dashboard",I.pie,"Dashboard"],["portfolio",I.chart,"พอร์ต"],["analysis",I.tup,"วิเคราะห์"],["tools",I.calc,"คำนวณ"],["goals",I.target,"เป้าหมาย"]].map(([id,icon,label])=>(
+          <button key={id} onClick={()=>setTab(id)} style={{padding:"11px 12px",fontSize:12,fontWeight:600,color:tab===id?"var(--accent2)":"var(--muted)",cursor:"pointer",border:"none",borderBottom:"2px solid "+(tab===id?"var(--accent)":"transparent"),background:"none",display:"flex",alignItems:"center",gap:4,whiteSpace:"nowrap",fontFamily:"inherit",flexShrink:0}}>
+            <Ic d={icon} size={13}/>{label}
           </button>
         ))}
       </nav>
 
-      <main style={{flex:1,padding:"20px",maxWidth:1400,margin:"0 auto",width:"100%",display:"flex",flexDirection:"column",gap:16}}>
+      <main style={{flex:1,padding:"12px",maxWidth:1400,margin:"0 auto",width:"100%",display:"flex",flexDirection:"column",gap:12}}>
 
         {/* PRICE PANEL */}
-        <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:12,padding:"12px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+        <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
           <div style={{display:"flex",flexDirection:"column",gap:7}}>
             <div style={{display:"flex",alignItems:"center",gap:10,flexWrap:"wrap"}}>
               {pxStatus==="loading"&&<span style={{fontSize:12,fontWeight:600,color:"var(--warn)",display:"flex",alignItems:"center",gap:5}}><span className="pulse" style={{width:7,height:7,borderRadius:"50%",background:"var(--warn)",display:"inline-block"}}/> กำลังดึงราคา...</span>}
@@ -855,7 +901,7 @@ function App() {
         </div>
 
         {/* GOOGLE SHEETS SYNC BAR */}
-        <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:12,padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}>
+        <div style={{background:"var(--card)",border:"1px solid var(--border)",borderRadius:12,padding:"8px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8,flexWrap:"wrap"}}>
           <div style={{display:"flex",alignItems:"center",gap:10,flex:1,flexWrap:"wrap"}}>
             <div style={{display:"flex",alignItems:"center",gap:6,fontSize:12,fontWeight:600}}>
               <span style={{fontSize:9,color:sheetUrl?"var(--pos)":"var(--muted)"}}>●</span>
@@ -878,7 +924,7 @@ function App() {
 
         {/* DASHBOARD TAB */}
         {tab==="dashboard"&&<>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:14}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:10}} className="stats-grid-resp">
             {[
               ["มูลค่าพอร์ตรวม",fUSD(summary.tv),"≈ ฿"+f2(summary.tv*usdThb,0)+" • "+assets.length+" สินทรัพย์",""],
               ["กำไร/ขาดทุนรวม",fUSD(summary.tp),fPct(summary.tpp)+" จากต้นทุน",clr(summary.tp)],
@@ -893,7 +939,7 @@ function App() {
               </div>
             ))}
           </div>
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}} className="grid-2col">
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}} className="grid-2col">
             {topG&&<div style={{...S.card,display:"flex",alignItems:"center",gap:14}}>
               <div style={{width:40,height:40,borderRadius:12,background:"rgba(74,222,128,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🏆</div>
               <div><div style={{fontSize:11,color:"var(--muted)"}}>Best Performer</div><div style={{fontWeight:700,fontSize:14,marginTop:2}}>{topG.name}</div><div style={{fontFamily:"var(--mono)",fontSize:13,color:"var(--pos)",marginTop:2}}>{fPct(topG.pnlPct)}</div></div>
@@ -904,7 +950,7 @@ function App() {
             </div>}
           </div>
           <GrowthChart assets={assets}/>
-          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:16}} className="grid-2col">
+          <div style={{display:"grid",gridTemplateColumns:"2fr 1fr",gap:16}} className="grid-2col dash-bottom-grid">
             <div style={S.card}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>P&amp;L by Asset</div><BarChart assets={assets}/></div>
             <div style={S.card}><div style={{fontSize:11,fontWeight:700,textTransform:"uppercase",letterSpacing:".06em",color:"var(--muted)",marginBottom:14}}>Allocation</div>{alloc.length>0&&<DonutChart data={alloc}/>}</div>
           </div>
@@ -921,23 +967,21 @@ function App() {
             </select>
           </div>
           {filtered.length===0?<div style={{textAlign:"center",padding:"50px 0",color:"var(--muted)"}}><div style={{fontSize:18,fontWeight:700,marginBottom:8}}>ยังไม่มีสินทรัพย์</div><div style={{fontSize:13}}>กด "+ เพิ่ม" เพื่อเริ่มต้น</div></div>:
-          <div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
-            <thead><tr>{["สินทรัพย์","ประเภท","จำนวน","ราคา","มูลค่า","P&amp;L","%P&amp;L","หมายเหตุ",""].map((h,i)=><th key={i} style={{textAlign:"left",padding:"9px 12px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",color:"var(--muted)",borderBottom:"1px solid var(--border)",whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
+          <div style={{overflowX:"auto",WebkitOverflowScrolling:"touch",margin:"0 -4px"}}><table style={{width:"100%",minWidth:500,borderCollapse:"collapse",fontSize:13}}>
+            <thead><tr>{["สินทรัพย์","จำนวน","ราคา","มูลค่า","P&amp;L","%P&amp;L",""].map((h,i)=><th key={i} style={{textAlign:"left",padding:"9px 10px",fontSize:10,fontWeight:700,textTransform:"uppercase",letterSpacing:".05em",color:"var(--muted)",borderBottom:"1px solid var(--border)",whiteSpace:"nowrap"}}>{h}</th>)}</tr></thead>
             <tbody>{filtered.map(a=><tr key={a.id} style={{borderBottom:"1px solid var(--surface)"}}>
-              <td style={{padding:"11px 12px"}}><div style={{display:"flex",alignItems:"center",gap:7}}>
+              <td style={{padding:"9px 10px"}}><div style={{display:"flex",alignItems:"center",gap:6}}>
                 <span style={{width:7,height:7,borderRadius:"50%",background:a.type==="หุ้น"?"#60a5fa":a.type==="คริปโต"?"#f59e0b":a.type==="ETF"?"#34d399":a.type==="กองทุน"?"#f472b6":"#a78bfa",flexShrink:0,display:"inline-block"}}/>
                 <div><div style={{fontWeight:700,fontSize:13,display:"flex",alignItems:"center",gap:6}}>{a.ticker}{a.dcaLots&&a.dcaLots.length>1&&<span style={{background:"rgba(251,191,36,.12)",color:"var(--warn)",fontSize:9,fontWeight:700,padding:"1px 6px",borderRadius:8}}>DCA {a.dcaLots.length}x</span>}</div>
                 <div style={{fontSize:10,color:"var(--muted)"}}>{a.name}</div>
                 <div style={{fontFamily:"var(--mono)",fontSize:10,color:"#94a3b8",display:"none"}} className="show-sm-price">{f2(a.currentPrice)} {a.currency}</div></div>
               </div></td>
-              <td style={{padding:"11px 12px",fontSize:11,color:"var(--muted)"}}>{a.type}</td>
-              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12}}>{f2(a.qty,a.qty%1===0?0:4)}</td>
-              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12}}>{f2(a.currentPrice)} <span style={{fontSize:10,color:"var(--muted)"}}>{a.currency}</span></td>
-              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12,fontWeight:600}}>{f2(a.value)}</td>
-              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12,color:a.pnlAmt>=0?"var(--pos)":"var(--neg)"}}>{a.pnlAmt>=0?"+":""}{f2(a.pnlAmt)}</td>
-              <td style={{padding:"11px 12px",fontFamily:"var(--mono)",fontSize:12,fontWeight:700,color:a.pnlPct>=0?"var(--pos)":"var(--neg)"}}>{fPct(a.pnlPct)}</td>
-              <td style={{padding:"11px 12px",fontSize:11,color:"var(--muted)",maxWidth:120,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{a.note||"—"}</td>
-              <td style={{padding:"11px 12px"}}><div style={{display:"flex",gap:3}}>
+              <td style={{padding:"9px 10px",fontFamily:"var(--mono)",fontSize:12}}>{f2(a.qty,a.qty%1===0?0:4)}</td>
+              <td style={{padding:"9px 10px",fontFamily:"var(--mono)",fontSize:12}}>{f2(a.currentPrice)} <span style={{fontSize:10,color:"var(--muted)"}}>{a.currency}</span></td>
+              <td style={{padding:"9px 10px",fontFamily:"var(--mono)",fontSize:12,fontWeight:600}}>{f2(a.value)}</td>
+              <td style={{padding:"9px 10px",fontFamily:"var(--mono)",fontSize:12,color:a.pnlAmt>=0?"var(--pos)":"var(--neg)"}}>{a.pnlAmt>=0?"+":""}{f2(a.pnlAmt)}</td>
+              <td style={{padding:"9px 10px",fontFamily:"var(--mono)",fontSize:12,fontWeight:700,color:a.pnlPct>=0?"var(--pos)":"var(--neg)"}}>{fPct(a.pnlPct)}</td>
+              <td style={{padding:"9px 6px"}}><div style={{display:"flex",gap:3}}>
                 <button onClick={()=>{setEditAsset(a);setShowModal(true);}} style={{...S.iconBtn,padding:5}}><Ic d={I.edit} size={14}/></button>
                 <button onClick={()=>deleteAsset(a.id)} style={{...S.iconBtn,padding:5}}><Ic d={I.trash} size={14}/></button>
               </div></td>
