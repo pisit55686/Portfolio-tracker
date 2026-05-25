@@ -872,7 +872,7 @@ function App() {
 
       {/* TABS */}
       <nav style={{background:"var(--surface)",borderBottom:"1px solid var(--border)",padding:"0 12px",display:"flex",gap:0,overflowX:"auto",WebkitOverflowScrolling:"touch",scrollbarWidth:"none"}}>
-        {[["dashboard",I.pie,"Dashboard"],["portfolio",I.chart,"พอร์ต"],["analysis",I.tup,"วิเคราะห์"],["tools",I.calc,"คำนวณ"],["goals",I.target,"เป้าหมาย"]].map(([id,icon,label])=>(
+        {[["dashboard",I.pie,"Dashboard"],["portfolio",I.chart,"พอร์ต"],["analysis",I.tup,"วิเคราะห์"],["tools",I.calc,"เครื่องมือ"]].map(([id,icon,label])=>(
           <button key={id} onClick={()=>setTab(id)} style={{padding:"11px 12px",fontSize:12,fontWeight:600,color:tab===id?"var(--accent2)":"var(--muted)",cursor:"pointer",border:"none",borderBottom:"2px solid "+(tab===id?"var(--accent)":"transparent"),background:"none",display:"flex",alignItems:"center",gap:4,whiteSpace:"nowrap",fontFamily:"inherit",flexShrink:0}}>
             <Ic d={icon} size={13}/>{label}
           </button>
@@ -942,11 +942,25 @@ function App() {
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}} className="grid-2col">
             {topG&&<div style={{...S.card,display:"flex",alignItems:"center",gap:14}}>
               <div style={{width:40,height:40,borderRadius:12,background:"rgba(74,222,128,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>🏆</div>
-              <div><div style={{fontSize:11,color:"var(--muted)"}}>Best Performer</div><div style={{fontWeight:700,fontSize:14,marginTop:2}}>{topG.name}</div><div style={{fontFamily:"var(--mono)",fontSize:13,color:"var(--pos)",marginTop:2}}>{fPct(topG.pnlPct)}</div></div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:11,color:"var(--muted)"}}>Best Performer</div>
+                <div style={{fontWeight:700,fontSize:14,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{topG.name}</div>
+                <div style={{display:"flex",gap:8,marginTop:2}}>
+                  <span style={{fontFamily:"var(--mono)",fontSize:13,color:"var(--pos)"}}>{fPct(topG.pnlPct)}</span>
+                  <span style={{fontFamily:"var(--mono)",fontSize:12,color:"var(--muted)"}}>{topG.pnlAmt>=0?"+":""}{fUSD(topG.pnlAmt)}</span>
+                </div>
+              </div>
             </div>}
             {topL&&<div style={{...S.card,display:"flex",alignItems:"center",gap:14}}>
-              <div style={{width:40,height:40,borderRadius:12,background:"rgba(248,113,113,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>📉</div>
-              <div><div style={{fontSize:11,color:"var(--muted)"}}>Worst Performer</div><div style={{fontWeight:700,fontSize:14,marginTop:2}}>{topL.name}</div><div style={{fontFamily:"var(--mono)",fontSize:13,color:"var(--neg)",marginTop:2}}>{fPct(topL.pnlPct)}</div></div>
+              <div style={{width:40,height:40,borderRadius:12,background:"rgba(248,113,113,.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,flexShrink:0}}>{topL.pnlPct<0?"📉":"😎"}</div>
+              <div style={{flex:1,minWidth:0}}>
+                <div style={{fontSize:11,color:"var(--muted)"}}>{topL.pnlPct<0?"Worst Performer":"All Positive! 🎉"}</div>
+                <div style={{fontWeight:700,fontSize:14,marginTop:2,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{topL.name}</div>
+                <div style={{display:"flex",gap:8,marginTop:2}}>
+                  <span style={{fontFamily:"var(--mono)",fontSize:13,color:topL.pnlPct<0?"var(--neg)":"var(--pos)"}}>{fPct(topL.pnlPct)}</span>
+                  <span style={{fontFamily:"var(--mono)",fontSize:12,color:"var(--muted)"}}>{topL.pnlAmt>=0?"+":""}{fUSD(topL.pnlAmt)}</span>
+                </div>
+              </div>
             </div>}
           </div>
           <GrowthChart assets={assets}/>
@@ -1013,7 +1027,6 @@ function App() {
         </>}
 
         {tab==="tools"&&<ToolsTab assets={assets} usdThb={usdThb}/>}
-        {tab==="goals"&&<GoalsTab assets={assets} goals={goals} saveGoal={saveGoal} deleteGoal={deleteGoal} usdThb={usdThb}/>}
 
       </main>
 
